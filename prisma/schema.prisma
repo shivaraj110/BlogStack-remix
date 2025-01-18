@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  identifier   String       @unique
+  email        String
+  name         String?
+  password     String?
+  posts        Post[]
+  bookmarks    Bookmark[]
+  pfpUrl       String?
+  fname        String?
+  lname        String?
+  Comment      Comment[]
+  Replies      Replies[]
+  Connections  Connection[]
+  openToCollab Boolean @default(true)
+  joinedOn DateTime @default(now())
+}
+
+model Connection {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+model Post {
+  id           Int        @id @default(autoincrement())
+  title        String
+  content      String
+  published    Boolean    @default(false)
+  author       User       @relation(fields: [authorId], references: [identifier])
+  authorId     String
+  authorImgUrl String
+  publishDate  String
+  tags         String[]
+  bookmarks    Bookmark[]
+  bookmarked   Boolean    @default(false)
+  likes        Int        @default(0)
+  comments     Comment[]
+  imgUrl       String
+}
+
+model Bookmark {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [identifier], onDelete: Cascade)
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id          Int       @id @default(autoincrement())
+  user        User      @relation(fields: [userId], references: [identifier])
+  userId      String
+  comment     String
+  replies     Replies[]
+  Post        Post?     @relation(fields: [postId], references: [id])
+  postId      Int?
+  commentedAt DateTime  @default(now())
+}
+
+model Replies {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  Comment   Comment? @relation(fields: [commentId], references: [id])
+  commentId Int?
+}
