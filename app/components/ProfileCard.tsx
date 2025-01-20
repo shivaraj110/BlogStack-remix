@@ -43,10 +43,6 @@ export function ProfileCard(dateJoined: { dateJoined: string }) {
         </div>
       </div>
       <div className="flex pb-5 pr-5 justify-end">
-        <div className="flex space-x-3">
-          <Edit className="hover:text-blue-600 transi delay-100 cursor-pointer" />
-          <Trash2 className="hover:text-red-600 transi delay-100 cursor-pointer" />
-        </div>
       </div>
     </div>
   );
