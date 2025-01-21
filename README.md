@@ -1,4 +1,4 @@
 # Welcome to BlogStack!
 
-A Blogging website for share your knowledge across the internet.
+A Blogging website for sharing your knowledge across the internet.
 
