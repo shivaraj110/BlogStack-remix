@@ -1,4 +1,3 @@
-
 import {
   SignedIn,
   SignedOut,
@@ -45,49 +44,10 @@ catch(e){
 }
 return ""
 }
-
-
-
 function Landing() {
-  interface BlogType {
-    id: number;
-    title: string;
-    content: string;
-    author: {
-      name: string;
-    };
-    publishDate: string;
-  }
-  const blogs: BlogType[] = [ {
-    id: 1,
-    title: "featured blog",
-    content: "content of featured blog",
-    author: {
-      name: "John",
-    },
-    publishDate: "12/12/2023",
-  }, {
-    id: 1,
-    title: "featured blog",
-    content: "content of featured blog",
-    author: {
-      name: "John",
-    },
-    publishDate: "12/12/2023",
-  }, {
-    id: 1,
-    title: "featured blog",
-    content: "content of featured blog",
-    author: {
-      name: "John",
-    },
-    publishDate: "12/12/2023",
-  },]
-  
   return (
     <div>
 <SignedOut>
-
             <LandingComp/>
       </SignedOut>
       <SignedIn>
@@ -95,6 +55,5 @@ function Landing() {
     </div>
   );
 }
-
 export default Landing;
 
