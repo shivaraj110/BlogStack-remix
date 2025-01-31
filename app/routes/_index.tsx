@@ -42,7 +42,7 @@ if(userId){
 catch(e){
   console.error( "error :(  " + e);
 }
-return redirect("/dashboard") 
+return redirect("/") 
 }
 function Landing() {
   return (
