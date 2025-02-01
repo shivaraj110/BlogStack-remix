@@ -21,6 +21,7 @@ model User {
   name         String?
   password     String?
   posts        Post[]
+  likes        Post[] @relation("LikedPosts")
   bookmarks    Bookmark[]
   pfpUrl       String?
   fname        String?
@@ -51,6 +52,7 @@ model Post {
   bookmarks    Bookmark[]
   bookmarked   Boolean    @default(false)
   likes        Int        @default(0)
+  likedBy      User[]     @relation("LikedPosts")
   comments     Comment[]
   imgUrl       String
 }

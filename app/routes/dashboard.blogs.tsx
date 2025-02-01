@@ -25,6 +25,13 @@ export const loader: LoaderFunction = async (args) => {
             id: true,
           },
         },
+        likedBy: {
+          select: {
+            fname: true,
+            lname: true,
+            pfpUrl: true,
+          },
+        },
       },
     });
     const bookmarks = await getBookmarks(userId ?? "");
@@ -52,6 +59,12 @@ export default function () {
     authorId: number;
     publishDate: string;
     likes: number;
+    likedBy: {
+      identifier: string;
+      fname: string;
+      lname: string;
+      pfpUrl: string;
+    }[];
     imgUrl: string;
     authorImgUrl: string;
     tags: string[];
@@ -94,6 +107,7 @@ export default function () {
               publishDate={b.publishDate ? b.publishDate : "no trace"}
               likes={b.likes}
               id={b.id}
+              likedBy={b.likedBy}
               bookmarks={bookmarkIds}
             />
           ))}
