@@ -116,7 +116,7 @@ function BlogPost({
           <div className="flex items-center justify-between text-sm  ">
             <div className="flex items-center space-x-4">
               <fetcher.Form
-                method={isLiked ? "DELETE" : "POST"}
+                method={"PUT"}
                 action={isLiked ? "/api/removelike" : "/api/addlike"}
               >
                 <button
