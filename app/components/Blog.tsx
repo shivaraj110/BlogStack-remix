@@ -128,6 +128,9 @@ function BlogPost({
                   <input type="hidden" name="userId" value={user?.id ?? ""} />
                   <div className="flex items-center space-x-1">
                     <Heart
+                      onClick={() => {
+                        setIsLiked(!isLiked);
+                      }}
                       type="submit"
                       className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`}
                     />
@@ -142,7 +145,13 @@ function BlogPost({
                           </div>
                         ))
                       : ""}
-                    {likes != 0 && likes != 1 && `and ${likes ?? 0 - 1} others`}
+                    {likes != 0 &&
+                      likes != 1 &&
+                      ` ${
+                        likedBy.length > 1
+                          ? likedBy.length
+                          : "+" + likedBy.length
+                      }`}
                   </span>
                 </button>
               </fetcher.Form>
