@@ -19,6 +19,7 @@ export const loader: LoaderFunction = async (args) => {
         imgUrl: true,
         publishDate: true,
         authorImgUrl: true,
+        comments: true,
         author: {
           select: {
             name: true,
@@ -59,6 +60,7 @@ export default function () {
     authorId: number;
     publishDate: string;
     likes: number;
+    comments: [];
     likedBy: {
       identifier: string;
       fname: string;
@@ -96,6 +98,7 @@ export default function () {
         <div className="mt-6">
           {blogs.map((b) => (
             <BlogPost
+              comments={b.comments.length}
               authorId={b.author.id}
               key={b.id}
               imgUrl={b.imgUrl ?? ""}

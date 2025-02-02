@@ -8,6 +8,7 @@ export interface BlogData {
   authorId: number;
   content: string;
   publishDate: string;
+  comments: number;
   tags: string[];
   likes?: number;
   id: number;
@@ -28,6 +29,7 @@ function BlogPost({
   title,
   content,
   publishDate,
+  comments,
   tags,
   likes,
   id,
@@ -60,7 +62,6 @@ function BlogPost({
   const [searchParams, setSearchParams] = useSearchParams();
   const theme = searchParams.get("theme");
   const fetcher = useFetcher();
-
   return (
     <div
       className={` bg-white/25  backdrop-brightness-95  ${
@@ -136,7 +137,9 @@ function BlogPost({
                     {likes != 0 ? "liked by " : "likes"}
                     {likedBy[0]
                       ? likedBy.map((l) => (
-                          <div className="mx-1">{l.fname + " "}</div>
+                          <div className="mx-1">
+                            {l.identifier == user?.id ? "you" : l.fname + " "}
+                          </div>
                         ))
                       : ""}
                     {likes != 0 && likes != 1 && `and ${likes ?? 0 - 1} others`}
@@ -145,7 +148,7 @@ function BlogPost({
               </fetcher.Form>
               <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors duration-200">
                 <MessageCircle className="h-5 w-5" />
-                <span>10 Comments</span>
+                <span>{comments} Comments</span>
               </button>
             </div>
             <div className="flex items-center space-x-4">
