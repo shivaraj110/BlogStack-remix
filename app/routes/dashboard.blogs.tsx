@@ -77,7 +77,10 @@ export default function () {
     return (
       <div className="p-5 flex">
         No blogs added yet. Be the first one to{" "}
-        <Link to={"/blog/write"} className="underline px-1 cursor-pointer">
+        <Link
+          to={"/dashboard/blog/solo"}
+          className="underline px-1 cursor-pointer"
+        >
           add blogs
         </Link>
         !

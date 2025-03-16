@@ -9,6 +9,7 @@ CREATE TABLE "User" (
     "fname" TEXT,
     "lname" TEXT,
     "openToCollab" BOOLEAN NOT NULL DEFAULT true,
+    "joinedOn" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -32,7 +33,6 @@ CREATE TABLE "Post" (
     "publishDate" TEXT NOT NULL,
     "tags" TEXT[],
     "bookmarked" BOOLEAN NOT NULL DEFAULT false,
-    "likes" INTEGER NOT NULL DEFAULT 0,
     "imgUrl" TEXT NOT NULL,
 
     CONSTRAINT "Post_pkey" PRIMARY KEY ("id")
@@ -49,11 +49,22 @@ CREATE TABLE "Bookmark" (
 );
 
 -- CreateTable
+CREATE TABLE "Like" (
+    "id" SERIAL NOT NULL,
+    "userId" TEXT NOT NULL,
+    "postId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Like_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Comment" (
     "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "comment" TEXT NOT NULL,
     "postId" INTEGER,
+    "commentedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
 );
@@ -70,9 +81,6 @@ CREATE TABLE "Replies" (
 -- CreateIndex
 CREATE UNIQUE INDEX "User_identifier_key" ON "User"("identifier");
 
--- CreateIndex
-CREATE UNIQUE INDEX "Bookmark_postId_key" ON "Bookmark"("postId");
-
 -- AddForeignKey
 ALTER TABLE "Connection" ADD CONSTRAINT "Connection_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -86,7 +94,13 @@ ALTER TABLE "Bookmark" ADD CONSTRAINT "Bookmark_userId_fkey" FOREIGN KEY ("userI
 ALTER TABLE "Bookmark" ADD CONSTRAINT "Bookmark_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Comment" ADD CONSTRAINT "Comment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Like" ADD CONSTRAINT "Like_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("identifier") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Like" ADD CONSTRAINT "Like_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("identifier") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE SET NULL ON UPDATE CASCADE;

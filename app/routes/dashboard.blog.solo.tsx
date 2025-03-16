@@ -33,10 +33,7 @@ export const action: ActionFunction = async (args: ActionFunctionArgs) => {
       publishDate,
       authorImgUrl,
     });
-    alert("added the blog!");
-    return {
-      status: "success",
-    };
+    return redirect("/dashboard/blogs");
   } catch (e) {
     console.error(e);
     return {
