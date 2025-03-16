@@ -12,11 +12,8 @@ export const action: ActionFunction = async (args) => {
       },
       data: {
         likes: {
-          increment: 1,
-        },
-        likedBy: {
-          connect: {
-            identifier: userId,
+          create: {
+            userId: userId,
           },
         },
       },

@@ -21,7 +21,6 @@ model User {
   name         String?
   password     String?
   posts        Post[]
-  likes        Post[] @relation("LikedPosts")
   bookmarks    Bookmark[]
   pfpUrl       String?
   fname        String?
@@ -29,8 +28,9 @@ model User {
   Comment      Comment[]
   Replies      Replies[]
   Connections  Connection[]
-  openToCollab Boolean @default(true)
-  joinedOn DateTime @default(now())
+  openToCollab Boolean      @default(true)
+  joinedOn     DateTime     @default(now())
+  likes        Like[]
 }
 
 model Connection {
@@ -51,13 +51,21 @@ model Post {
   tags         String[]
   bookmarks    Bookmark[]
   bookmarked   Boolean    @default(false)
-  likes        Int        @default(0)
-  likedBy      User[]     @relation("LikedPosts")
   comments     Comment[]
   imgUrl       String
+  likes        Like[]
 }
 
 model Bookmark {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [identifier], onDelete: Cascade)
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  createdAt DateTime @default(now())
+}
+
+model Like {
   id        Int      @id @default(autoincrement())
   user      User     @relation(fields: [userId], references: [identifier], onDelete: Cascade)
   userId    String

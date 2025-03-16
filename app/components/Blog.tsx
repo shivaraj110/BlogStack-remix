@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Bookmark, Heart, MessageCircle, Share2 } from "lucide-react";
 import { Link, useFetcher, useSearchParams } from "@remix-run/react";
 import { useUser } from "@clerk/remix";
@@ -15,12 +15,6 @@ export interface BlogData {
   imgUrl: string;
   authorImgUrl: string;
   bookmarks: number[];
-  likedBy: {
-    identifier: string;
-    fname: string;
-    lname: string;
-    pfpUrl: string;
-  }[];
 }
 
 function BlogPost({
@@ -33,21 +27,13 @@ function BlogPost({
   tags,
   likes,
   id,
-  likedBy,
   authorImgUrl,
   imgUrl,
   bookmarks,
 }: BlogData) {
   const { user } = useUser();
-  const liked = () => {
-    let val = false;
-    likedBy.map((l) => {
-      if (l.identifier === user?.id) {
-        val = true;
-      }
-    });
-    return val;
-  };
+  const [isLiked, setIsLiked] = useState<boolean>(false);
+
   const BookMarked = () => {
     let val = false;
     bookmarks.map((b) => {
@@ -57,9 +43,10 @@ function BlogPost({
     });
     return val;
   };
-  const [isLiked, setIsLiked] = useState(liked);
+
   const [isBookmarked, setIsBookmarked] = useState(BookMarked);
   const [searchParams, setSearchParams] = useSearchParams();
+
   const theme = searchParams.get("theme");
   const fetcher = useFetcher();
   return (
@@ -136,23 +123,7 @@ function BlogPost({
                     />
                     <span className="text-xs">{likes}</span>
                   </div>
-                  <span className="text-xs space-x-1 flex">
-                    {likes != 0 ? "liked by " : "likes"}
-                    {likedBy[0]
-                      ? likedBy.map((l) => (
-                          <div className="mx-1">
-                            {l.identifier == user?.id ? "you" : l.fname + " "}
-                          </div>
-                        ))
-                      : ""}
-                    {likes != 0 &&
-                      likes != 1 &&
-                      ` ${
-                        likedBy.length > 1
-                          ? likedBy.length
-                          : "+" + likedBy.length
-                      }`}
-                  </span>
+                  <span className="text-xs space-x-1 flex"></span>
                 </button>
               </fetcher.Form>
               <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors duration-200">

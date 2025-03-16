@@ -5,22 +5,14 @@ export const action: ActionFunction = async (args) => {
   const formData = await args.request.formData();
   const postId = Number(formData.get("postId"));
   const userId = String(formData.get("userId"));
+  const id = Number(formData.get("id"));
   try {
-    const likePushed = await prisma.post.update({
+    const removedLike = await prisma.like.delete({
       where: {
-        id: postId,
-      },
-      data: {
-        likes: {
-          decrement: 1,
-        },
-        likedBy: {
-          disconnect: {
-            identifier: userId,
-          },
-        },
+        id,
       },
     });
+
     return {
       status: "success",
     };
