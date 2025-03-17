@@ -3,6 +3,7 @@ import { LoaderFunction } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 import { getBookmarks } from "~/.server/bookmark";
 import { prisma } from "~/.server/db";
+import { getLikes } from "~/.server/likes";
 import BlogPost from "~/components/Blog";
 
 export const loader: LoaderFunction = async (args) => {
@@ -20,6 +21,7 @@ export const loader: LoaderFunction = async (args) => {
         publishDate: true,
         authorImgUrl: true,
         comments: true,
+        bookmarks: true,
         author: {
           select: {
             name: true,
@@ -29,13 +31,18 @@ export const loader: LoaderFunction = async (args) => {
       },
     });
     const bookmarks = await getBookmarks(userId ?? "");
+    const likes = await getLikes(userId ?? "");
     let bookMarkPostIds: number[] = [];
+    let likedPosts: number[] = [];
+    likes?.map((l) => [likedPosts.push(l.postId)]);
     bookmarks?.map((b) => [bookMarkPostIds.push(b.postId)]);
+
     return {
       status: "success",
       body: {
         blogs,
         bookMarkPostIds,
+        likedPosts,
       },
     };
   } catch (e) {
@@ -52,14 +59,7 @@ export default function () {
     content: string;
     authorId: number;
     publishDate: string;
-    likes: number;
     comments: [];
-    likedBy: {
-      identifier: string;
-      fname: string;
-      lname: string;
-      pfpUrl: string;
-    }[];
     imgUrl: string;
     authorImgUrl: string;
     tags: string[];
@@ -73,6 +73,7 @@ export default function () {
   const { body } = useLoaderData<typeof loader>();
   const blogs: BlogData[] = body.blogs;
   const bookmarkIds: number[] = body.bookMarkPostIds;
+  const likedPosts: number[] = body.likedPosts;
   if (!blogs[0]) {
     return (
       <div className="p-5 flex">
@@ -95,6 +96,7 @@ export default function () {
           {blogs.map((b, key: number = 0) => (
             <div key={key++}>
               <BlogPost
+                likeCount={likedPosts.length}
                 comments={b.comments.length}
                 authorId={b.author.id}
                 key={b.id}
@@ -105,7 +107,7 @@ export default function () {
                 content={b.content}
                 tags={!b.tags ? ["notags"] : b.tags}
                 publishDate={b.publishDate ? b.publishDate : "no trace"}
-                likes={b.likes}
+                likes={likedPosts}
                 id={b.id}
                 bookmarks={bookmarkIds}
               />

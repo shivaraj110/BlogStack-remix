@@ -1,25 +1,19 @@
 import { ActionFunction } from "@remix-run/node";
-import { prisma } from "~/.server/db";
+import { pushLikes } from "~/.server/likes";
 
 export const action: ActionFunction = async (args) => {
   const formData = await args.request.formData();
   const postId = Number(formData.get("postId"));
   const userId = String(formData.get("userId"));
   try {
-    const likePushed = await prisma.post.update({
-      where: {
-        id: postId,
-      },
-      data: {
-        likes: {
-          create: {
-            userId: userId,
-          },
-        },
-      },
-    });
+    const pushedLike = await pushLikes(postId, userId);
+    if (pushedLike) {
+      return {
+        status: "success",
+      };
+    }
     return {
-      status: "success",
+      status: "failed",
     };
   } catch (e) {
     console.error(e);

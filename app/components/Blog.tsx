@@ -1,6 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Bookmark, Heart, MessageCircle, Share2 } from "lucide-react";
-import { Link, useFetcher, useSearchParams } from "@remix-run/react";
+import { Fetcher, Link, useFetcher, useSearchParams } from "@remix-run/react";
 import { useUser } from "@clerk/remix";
 export interface BlogData {
   authorName: string;
@@ -10,8 +10,9 @@ export interface BlogData {
   publishDate: string;
   comments: number;
   tags: string[];
-  likes?: number;
+  likes: number[];
   id: number;
+  likeCount: number;
   imgUrl: string;
   authorImgUrl: string;
   bookmarks: number[];
@@ -26,13 +27,13 @@ function BlogPost({
   comments,
   tags,
   likes,
+  likeCount,
   id,
   authorImgUrl,
   imgUrl,
   bookmarks,
 }: BlogData) {
   const { user } = useUser();
-  const [isLiked, setIsLiked] = useState<boolean>(false);
 
   const BookMarked = () => {
     let val = false;
@@ -44,11 +45,28 @@ function BlogPost({
     return val;
   };
 
-  const [isBookmarked, setIsBookmarked] = useState(BookMarked);
+  const Liked = () => {
+    let val = false;
+    likes.map((l) => {
+      if (l === id) {
+        val = true;
+      }
+    });
+    return val;
+  };
+
+  const [isLiked, setIsLiked] = useState<boolean>(Liked);
+  const [isBookmarked, setIsBookmarked] = useState<boolean>(BookMarked);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const theme = searchParams.get("theme");
-  const fetcher = useFetcher();
+  const fetcher = useFetcher<Fetcher>();
+
+  useEffect(() => {
+    setIsLiked(Liked());
+    setIsBookmarked(BookMarked());
+  }, [likes, bookmarks]);
+
   return (
     <div
       className={` bg-white/25  backdrop-brightness-95  ${
@@ -103,7 +121,7 @@ function BlogPost({
           <div className="flex items-center justify-between text-sm  ">
             <div className="flex items-center space-x-4">
               <fetcher.Form
-                method={"PUT"}
+                method={isLiked ? "DELETE" : "POST"}
                 action={isLiked ? "/api/removelike" : "/api/addlike"}
               >
                 <button
@@ -121,7 +139,7 @@ function BlogPost({
                       type="submit"
                       className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`}
                     />
-                    <span className="text-xs">{likes}</span>
+                    <span className="text-xs">{likeCount}</span>
                   </div>
                   <span className="text-xs space-x-1 flex"></span>
                 </button>

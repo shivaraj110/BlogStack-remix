@@ -1,23 +1,24 @@
 import { ActionFunction } from "@remix-run/node";
-import { prisma } from "~/.server/db";
+import { deleteLike } from "~/.server/likes";
 
 export const action: ActionFunction = async (args) => {
   const formData = await args.request.formData();
   const postId = Number(formData.get("postId"));
   const userId = String(formData.get("userId"));
-  const id = Number(formData.get("id"));
   try {
-    const removedLike = await prisma.like.delete({
-      where: {
-        id,
-      },
-    });
-
+    const deletedLike = await deleteLike(postId, userId);
+    if (deletedLike) {
+      return {
+        status: "success",
+      };
+    }
     return {
-      status: "success",
+      status: "failed",
     };
   } catch (e) {
     console.error(e);
-    return null;
+    return {
+      msg: "failed",
+    };
   }
 };
