@@ -9,21 +9,38 @@ import {
   NotebookPen,
   MessageSquareText,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Home = () => {
   const [isMobile, setIsMObile] = useState(false);
   const { user } = useUser();
 
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("theme") === "dark";
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+    } else {
+      document.documentElement.classList.add("light");
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
 
   const toggleDarkMode = () => {
     if (isDark) {
       document.documentElement.classList.toggle("light");
       document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
     } else {
       document.documentElement.classList.toggle("dark");
       document.documentElement.classList.remove("light");
+      localStorage.setItem("theme", "dark");
     }
     setIsDark(!isDark);
   };
@@ -89,7 +106,7 @@ const Home = () => {
                         type="checkbox"
                         role="switch"
                         name="theme"
-                        defaultValue="dark"
+                        checked={isDark}
                         onChange={toggleDarkMode}
                       />
                       <span className="theme__fill" />
