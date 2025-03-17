@@ -1,8 +1,11 @@
+#heavy files
 node_modules
-
 /.cache
 /build
-.env
 
+#secrets
+.env
 ./lib/url
 
+#util scripts
+pushAll.sh
