@@ -3,6 +3,7 @@ import { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 import { getBookmarks } from "~/.server/bookmark";
 import { prisma } from "~/.server/db";
+import { getLikes } from "~/.server/likes";
 import MyBlogPost from "~/components/MyBlog";
 
 export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
@@ -16,6 +17,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
       tags: true,
       title: true,
       content: true,
+      comments: true,
       likes: true,
       authorId: true,
       imgUrl: true,
@@ -29,37 +31,27 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
     },
   });
   const bookmarks = await getBookmarks(userId ?? "");
+  const likes = await getLikes(userId ?? "");
   let bookMarkPostIds: number[] = [];
   bookmarks?.map((b) => [bookMarkPostIds.push(b.postId)]);
+  let likedPosts: number[] = [];
+  likes?.map((l) => [likedPosts.push(l.postId)]);
+
   return {
     status: "success",
     body: {
       blogs,
       bookMarkPostIds,
+      likedPosts,
     },
   };
 };
 
 const MyBlogs = () => {
-  interface BlogType {
-    id: number;
-    title: string;
-    content: string;
-    published: boolean;
-    authorId: string;
-    authorImgUrl: string;
-    publishDate: string;
-    tags: string[];
-    likes: number;
-    imgUrl: string;
-    author: {
-      name: string;
-    };
-  }
   const { body } = useLoaderData<typeof loader>();
-  const blogs: BlogType[] = body.blogs;
+  const blogs: BlogData[] = body.blogs;
   const bookmarks: number[] = body.bookMarkPostIds;
-
+  const likedPosts: number[] = body.likedPosts;
   if (!blogs[0]) {
     return (
       <div className="p-5 flex">
@@ -71,11 +63,28 @@ const MyBlogs = () => {
     );
   }
 
+  interface BlogData {
+    title: string;
+    content: string;
+    authorId: number;
+    publishDate: string;
+    comments: [];
+    imgUrl: string;
+    authorImgUrl: string;
+    likes: [];
+    tags: string[];
+    author: {
+      name: string;
+      id: number;
+    };
+    id: number;
+  }
+
   return (
     <div className="p-1 max-w-7xl mx-auto">
       <div className="flex flex-col">
         <div className="mt-6">
-          {blogs.map((b: BlogType) => (
+          {blogs.map((b: BlogData) => (
             <MyBlogPost
               key={b.id}
               imgUrl={b.imgUrl}
@@ -85,7 +94,10 @@ const MyBlogs = () => {
               content={b.content}
               tags={!b.tags ? ["notags"] : b.tags}
               publishDate={b.publishDate ? b.publishDate : "no trace"}
-              likes={b.likes}
+              likes={likedPosts}
+              likeCount={b.likes.length}
+              comments={b.comments.length}
+              authorId={b.authorId}
               id={Number(b.id)}
               bookmarks={bookmarks}
             />

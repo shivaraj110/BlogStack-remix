@@ -1,21 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bookmark, Heart, MessageCircle, Share2, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Fetcher, Link } from "react-router-dom";
 import { useFetcher } from "@remix-run/react";
 import { useUser } from "@clerk/remix";
-
-export interface BlogData {
-  authorName: string;
-  title: string;
-  content: string;
-  publishDate: string;
-  tags: string[];
-  likes?: number;
-  id: number;
-  imgUrl: string;
-  authorImgUrl: string;
-  bookmarks: number[];
-}
+import { BlogData } from "~/types/BlogData";
 
 function MyBlogPost({
   authorName,
@@ -24,14 +12,13 @@ function MyBlogPost({
   publishDate,
   tags,
   likes,
+  likeCount,
+  comments,
   id,
   authorImgUrl,
   imgUrl,
   bookmarks,
 }: BlogData) {
-  const [isLiked, setIsLiked] = useState(false);
-  const fetcher = useFetcher();
-  const { user } = useUser();
   const BookMarked = () => {
     let val = false;
     bookmarks.map((b) => {
@@ -41,7 +28,26 @@ function MyBlogPost({
     });
     return val;
   };
+
+  const Liked = () => {
+    let val = false;
+    likes.map((l) => {
+      if (l === id) {
+        val = true;
+      }
+    });
+    return val;
+  };
+  const fetcher = useFetcher<Fetcher>();
+  const { user } = useUser();
+  const [isLiked, setIsLiked] = useState<boolean>(Liked);
   const [isBookmarked, setIsBookmarked] = useState(BookMarked);
+
+  useEffect(() => {
+    setIsLiked(Liked);
+    setIsBookmarked(BookMarked);
+  }, [Liked, BookMarked]);
+
   return (
     <div className=" bg-white/25  backdrop-brightness-95 text-slate-900 backdrop-blur-sm rounded-md border border-gray-200 overflow-hidden my-4">
       <div className="p-5">
@@ -88,18 +94,38 @@ function MyBlogPost({
           </div>
           <div className="flex sm:flex-row flex-col items-center justify-between text-sm  ">
             <div className="flex items-center space-x-4">
-              <button
-                className={`flex items-center space-x-2 ${
-                  isLiked ? "text-red-500" : "hover:text-red-500"
-                } transition-colors duration-200`}
-                onClick={() => setIsLiked(!isLiked)}
+              <fetcher.Form
+                method={Liked() ? "DELETE" : "POST"}
+                action={Liked() ? "/api/removelike" : "/api/addlike"}
               >
-                <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
-                <span>{likes} Reactions</span>
-              </button>
+                <div
+                  className={`flex items-center space-x-2 transition-colors duration-200`}
+                >
+                  <input type="hidden" name="postId" value={id} />
+                  <input type="hidden" name="userId" value={user?.id ?? ""} />
+                  <div className="flex items-center space-x-1">
+                    <button
+                      type="submit"
+                      onClick={() => {
+                        setIsLiked(!isLiked);
+                      }}
+                    >
+                      <Heart
+                        className={`h-5 w-5 ${
+                          isLiked
+                            ? "fill-current text-red-500"
+                            : "hover:text-red-500"
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs">{likeCount}</span>
+                  </div>
+                  <span className="text-xs space-x-1 flex"></span>
+                </div>
+              </fetcher.Form>
               <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors duration-200">
                 <MessageCircle className="h-5 w-5" />
-                <span>10 Comments</span>
+                <span>{comments} Comments</span>
               </button>
             </div>
             <div className="flex items-center space-x-4">
@@ -113,7 +139,7 @@ function MyBlogPost({
                   name="id"
                   value={id}
                 >
-                  <Trash2 className="hover:fill-red-300 hover:text-red-700 transi delay-75"/>
+                  <Trash2 className="hover:fill-red-300 hover:text-red-700 transi delay-75" />
                 </button>
               </fetcher.Form>
               <fetcher.Form
