@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bookmark, Heart, MessageCircle, Share2 } from "lucide-react";
 import { Link, useFetcher } from "react-router-dom";
 import { useUser } from "@clerk/remix";
@@ -11,14 +11,31 @@ function BookmarkedBlogPost({
   publishDate,
   tags,
   likes,
+  likeCount,
+  comments,
   id,
   authorImgUrl,
   imgUrl,
 }: BookmarkedBlogData["post"]) {
-  const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(true);
+  const Liked = () => {
+    let val = false;
+    likes.map((l) => {
+      if (l === id) {
+        val = true;
+      }
+    });
+    return val;
+  };
+
+  const [isLiked, setIsLiked] = useState<boolean>(Liked);
+  const [isBookmarked, setIsBookmarked] = useState<boolean>(true);
   const fetcher = useFetcher();
   const { user } = useUser();
+
+  useEffect(() => {
+    setIsLiked(Liked());
+  }, [Liked()]);
+
   return (
     <div className=" bg-white/25  backdrop-brightness-95  text-slate-900 backdrop-blur-sm rounded-md border border-gray-200 overflow-hidden my-4">
       <div className="p-5">
@@ -65,18 +82,38 @@ function BookmarkedBlogPost({
           </div>
           <div className="flex sm:flex-row flex-col items-center justify-between text-sm  ">
             <div className="flex items-center space-x-4">
-              <button
-                className={`flex items-center space-x-2 ${
-                  isLiked ? "text-red-500" : "hover:text-red-500"
-                } transition-colors duration-200`}
-                onClick={() => setIsLiked(!isLiked)}
+              <fetcher.Form
+                method={Liked() ? "DELETE" : "POST"}
+                action={Liked() ? "/api/removelike" : "/api/addlike"}
               >
-                <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
-                <span>{likes} Reactions</span>
-              </button>
+                <div
+                  className={`flex items-center space-x-2 transition-colors duration-200`}
+                >
+                  <input type="hidden" name="postId" value={id} />
+                  <input type="hidden" name="userId" value={user?.id ?? ""} />
+                  <div className="flex items-center space-x-1">
+                    <button
+                      type="submit"
+                      onClick={() => {
+                        setIsLiked(!isLiked);
+                      }}
+                    >
+                      <Heart
+                        className={`h-5 w-5 ${
+                          isLiked
+                            ? "fill-current text-red-500"
+                            : "hover:text-red-500"
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs">{likeCount}</span>
+                  </div>
+                  <span className="text-xs space-x-1 flex"></span>
+                </div>
+              </fetcher.Form>
               <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors duration-200">
                 <MessageCircle className="h-5 w-5" />
-                <span>10 Comments</span>
+                <span>{comments.length + " comments"}</span>
               </button>
             </div>
             <div className="flex items-center space-x-4">

@@ -5,7 +5,7 @@ export interface BookmarkedBlogData {
     authorId: number;
     content: string;
     publishDate: string;
-    comments: number;
+    comments: [];
     tags: string[];
     likes: number[];
     id: number;

@@ -51,7 +51,7 @@ function BlogPost({
   useEffect(() => {
     setIsLiked(Liked());
     setIsBookmarked(BookMarked());
-  }, [Liked, BookMarked]);
+  }, [Liked(), BookMarked()]);
 
   return (
     <div

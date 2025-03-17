@@ -8,7 +8,6 @@ export const action: ActionFunction = async (args) => {
   try {
     const bookmarkPushed = await pushBookmark(postId, userId);
     if (bookmarkPushed) {
-      alert("bookmark added!");
       return {
         status: "success",
       };

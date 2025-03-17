@@ -8,9 +8,10 @@ import {
   useSearchParams,
 } from "@remix-run/react";
 import { Bookmark, Heart, SendHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getBookmarks } from "~/.server/bookmark";
 import { prisma } from "~/.server/db";
+import { getLikes } from "~/.server/likes";
 
 export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
@@ -25,9 +26,9 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
         tags: true,
         title: true,
         content: true,
-        likes: true,
         authorId: true,
         imgUrl: true,
+        likes: true,
         publishDate: true,
         authorImgUrl: true,
         author: {
@@ -55,13 +56,17 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
       },
     });
     const bookmarks = await getBookmarks(userId ?? "");
+    const Likes = await getLikes(userId ?? "");
     let bookMarkPostIds: number[] = [];
+    let likedPosts: number[] = [];
     bookmarks?.map((b) => [bookMarkPostIds.push(b.postId)]);
+    Likes?.map((l) => [likedPosts.push(l.postId)]);
     return {
       status: "success",
       body: {
         blog,
         bookMarkPostIds,
+        likedPosts,
       },
     };
   } catch (e) {
@@ -81,7 +86,7 @@ const FullBlog = () => {
     authorImgUrl: string;
     publishDate: string;
     tags: string[];
-    likes: number;
+    likes: [];
     imgUrl: string;
     author: {
       name: string;
@@ -98,6 +103,7 @@ const FullBlog = () => {
     }[];
   } = body.blog;
   const bookmarks: number[] = body.bookMarkPostIds;
+  const likedPosts: number[] = body.likedPosts;
   const BookMarked = () => {
     let val = false;
     bookmarks.map((b) => {
@@ -107,15 +113,32 @@ const FullBlog = () => {
     });
     return val;
   };
+
+  const Liked = () => {
+    let val = false;
+    likedPosts.map((l) => {
+      if (l === blog.id) {
+        val = true;
+      }
+    });
+    return val;
+  };
+
   const { user } = useUser();
-  const [isLiked, setIsLiked] = useState(false);
-  const [comment, setComment] = useState("");
+  const [isLiked, setIsLiked] = useState<boolean>(Liked());
+  const [comment, setComment] = useState<string>("");
   const blogFirstPart = blog.content.slice(0, 350);
   const blogSecondPart = blog.content.slice(350, blog.content.length - 1);
   const fetcher = useFetcher();
   const [isBookmarked, setIsBookmarked] = useState(BookMarked);
   const [searchParams, setSearchParams] = useSearchParams();
   const theme = searchParams.get("theme");
+
+  useEffect(() => {
+    setIsLiked(Liked());
+    setIsBookmarked(BookMarked());
+  }, [Liked(), BookMarked()]);
+
   return (
     <div className="p-8 mx-auto mt-6 flex">
       <div
@@ -127,7 +150,7 @@ const FullBlog = () => {
           <div className="flex flex-col gap-4">
             <div className="font-semibold flex justify-between gap-2 text-xl">
               {blog.title}
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-center items-center">
                 <fetcher.Form
                   className="flex"
                   method={isBookmarked ? "DELETE" : "POST"}
@@ -154,19 +177,35 @@ const FullBlog = () => {
                     />
                   </button>
                 </fetcher.Form>
-                <button
-                  className={`flex items-center space-x-1 ${
-                    isLiked ? "text-red-500" : "hover:text-red-500"
-                  } transition-colors duration-200`}
-                  onClick={() => setIsLiked(!isLiked)}
+                <fetcher.Form
+                  method={Liked() ? "DELETE" : "POST"}
+                  action={Liked() ? "/api/removelike" : "/api/addlike"}
                 >
-                  <Heart
-                    className={`size-4 ${isLiked ? "fill-current" : ""}`}
-                  />
-                  <span className="font-light">
-                    {!blog.likes ? 6 + "M" : blog.likes}
-                  </span>
-                </button>
+                  <div
+                    className={`flex items-center space-x-2 transition-colors duration-200`}
+                  >
+                    <input type="hidden" name="postId" value={blog.id} />
+                    <input type="hidden" name="userId" value={user?.id ?? ""} />
+                    <div className="flex items-center space-x-1">
+                      <button
+                        type="submit"
+                        onClick={() => {
+                          setIsLiked(!isLiked);
+                        }}
+                      >
+                        <Heart
+                          className={`h-5 w-5 ${
+                            isLiked
+                              ? "fill-current text-red-500"
+                              : "hover:text-red-500"
+                          }`}
+                        />
+                      </button>
+                      <span className="text-xs">{blog.likes.length}</span>
+                    </div>
+                    <span className="text-xs space-x-1 flex"></span>
+                  </div>
+                </fetcher.Form>
               </div>
             </div>
 
@@ -195,11 +234,9 @@ const FullBlog = () => {
                     {" - "}
                     {blog.author.name ?? "Anonymous"}
                   </div>
+
                   <div className="text-gray-800 mx-2 ">
-                    {"beta user" + " | BlogStack"}
-                  </div>
-                  <div className="text-gray-800 mx-2 ">
-                    {"Joined on Jan 6 2023"}
+                    {"Published on " + blog.publishDate}
                   </div>
                 </div>
                 <div className="">

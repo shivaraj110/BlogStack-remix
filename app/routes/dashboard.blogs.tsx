@@ -62,6 +62,7 @@ export default function () {
     comments: [];
     imgUrl: string;
     authorImgUrl: string;
+    likes: [];
     tags: string[];
     author: {
       name: string;
@@ -96,7 +97,7 @@ export default function () {
           {blogs.map((b, key: number = 0) => (
             <div key={key++}>
               <BlogPost
-                likeCount={likedPosts.length}
+                likeCount={b.likes.length}
                 comments={b.comments.length}
                 authorId={b.author.id}
                 key={b.id}

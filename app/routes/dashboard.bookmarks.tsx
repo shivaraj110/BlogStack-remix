@@ -53,7 +53,7 @@ export default function () {
             <BookmarkedBlogPost
               authorId={b.post.authorId}
               comments={b.post.comments}
-              likeCount={likedPosts.length}
+              likeCount={b.post.likes.length}
               key={b.post.id}
               imgUrl={b.post.imgUrl}
               authorImgUrl={b.post.authorImgUrl}
@@ -62,7 +62,7 @@ export default function () {
               content={b.post.content}
               tags={!b.post.tags ? ["notags"] : b.post.tags}
               publishDate={b.post.publishDate ? b.post.publishDate : "no trace"}
-              likes={b.post.likes}
+              likes={likedPosts}
               id={Number(b.post.id)}
             />
           ))}
