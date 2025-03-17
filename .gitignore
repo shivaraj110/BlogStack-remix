@@ -8,4 +8,5 @@ node_modules
 ./lib/url
 
 #util scripts
+dev.sh
 pushAll.sh
