@@ -29,52 +29,47 @@ export const loader: LoaderFunction = (args: LoaderFunctionArgs) => {
   return rootAuthLoader(args, clerkEnv);
 };
 
-export function Layout({ children }: { children: React.ReactNode }) {
-const [isDark, setIsDark] = useState(false);
+function App() {
+  const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    // Define a function to check if the 'dark' class exists
-    const checkDarkTheme = () => {
-      if (typeof document !== 'undefined') {
-        const darkClassExists = document.querySelector('.dark') !== null;
-        setIsDark(darkClassExists);
-      }
-    };
-
-    // Call the function once on component mount
-    checkDarkTheme();
-
-    // Optional: Set up a MutationObserver if the 'dark' class might change dynamically
-    const observer = new MutationObserver(checkDarkTheme);
-    observer.observe(document.documentElement, { attributes: true, subtree: true });
-
-    // Cleanup observer on unmount
-    return () => observer.disconnect();
+    setMounted(true);
+    const isDarkMode =
+      localStorage.getItem("theme") === "dark" ||
+      (!localStorage.getItem("theme") &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setIsDark(isDarkMode);
   }, []);
 
+  useEffect(() => {
+    if (mounted) {
+      const root = window.document.documentElement;
+      if (isDark) {
+        root.classList.add("dark");
+        root.classList.remove("light");
+        localStorage.setItem("theme", "dark");
+      } else {
+        root.classList.add("light");
+        root.classList.remove("dark");
+        localStorage.setItem("theme", "light");
+      }
+    }
+  }, [isDark, mounted]);
 
-return (
-    <html lang="en">
+  return (
+    <html lang="en" className={mounted ? (isDark ? "dark" : "light") : ""}>
       <head>
         <Meta />
         <Links />
       </head>
-      <body
-        className={` 
-             ${isDark ?  "bg-[url(../public/bgd.png)]" :"bg-[url(../public/bg.jpg)]"  } 
-         bg-cover bg-fixed bg-no-repeat`}
-      >
-        <div></div>
-        {children}
+      <body className="min-h-screen bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white transition-colors duration-300">
+        <Outlet />
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
   );
-}
-
-function App() {
-  return <Outlet />;
 }
 
 export default ClerkApp(App);

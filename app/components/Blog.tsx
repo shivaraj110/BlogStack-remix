@@ -55,9 +55,7 @@ function BlogPost({
 
   return (
     <div
-      className={` bg-white/25  backdrop-brightness-95  ${
-        theme !== "dark" ? "text-slate-900" : " text-slate-300"
-      }   backdrop-blur-sm rounded-lg border transi border-gray-200 overflow-hidden my-4`}
+      className={`bg-white/25 dark:bg-[#0a0a0a]/25 backdrop-brightness-95 backdrop-blur-sm rounded-lg border dark:border-white/10 transi border-gray-200 overflow-hidden my-4`}
     >
       <div className="p-5">
         <div className="flex items-center mb-4">
@@ -69,25 +67,27 @@ function BlogPost({
             />
           </Link>
           <div>
-            <h2 className="text-base font-medium ">{authorName}</h2>
-            <p className="text-xs">{publishDate}</p>
+            <h2 className="text-base font-medium dark:text-white">
+              {authorName}
+            </h2>
+            <p className="text-xs dark:text-gray-400">{publishDate}</p>
           </div>
         </div>
         <div className="md:pl-10">
           <Link to={`/dashboard/fullblog/${id}`}>
-            <h1 className="text-2xl font-bold  mb-2 hover:text-blue-600  cursor-pointer transition-colors duration-200">
+            <h1 className="text-2xl font-bold mb-2 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors duration-200 dark:text-white">
               {title}
             </h1>
           </Link>
           <div className="text-sm grid grid-cols-3 gap-3 mb-4">
-            <div className="col-span-2">
+            <div className="col-span-2 dark:text-gray-300">
               {content.slice(0, 600) + (content.length < 600 ? "" : "...")}
             </div>
             <div className="mx-auto col-span-1 pl-5">
               <img
                 src={imgUrl}
                 alt="BlogImage"
-                className=" cursor-pointer object-scale-down size-full  border rounded-lg col-span-1"
+                className="cursor-pointer object-scale-down size-full border dark:border-white/10 rounded-lg col-span-1"
               />
             </div>
           </div>
