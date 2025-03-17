@@ -2,17 +2,7 @@ import { useState } from "react";
 import { Bookmark, Heart, MessageCircle, Share2 } from "lucide-react";
 import { Link, useFetcher } from "react-router-dom";
 import { useUser } from "@clerk/remix";
-export interface BlogData {
-  authorName: string;
-  title: string;
-  content: string;
-  publishDate: string;
-  tags: string[];
-  likes?: number;
-  id: number;
-  imgUrl: string;
-  authorImgUrl: string;
-}
+import { BookmarkedBlogData } from "~/types/BookMarkedBlogs";
 
 function BookmarkedBlogPost({
   authorName,
@@ -24,7 +14,7 @@ function BookmarkedBlogPost({
   id,
   authorImgUrl,
   imgUrl,
-}: BlogData) {
+}: BookmarkedBlogData["post"]) {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(true);
   const fetcher = useFetcher();

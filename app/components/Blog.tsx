@@ -2,21 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Bookmark, Heart, MessageCircle, Share2 } from "lucide-react";
 import { Fetcher, Link, useFetcher, useSearchParams } from "@remix-run/react";
 import { useUser } from "@clerk/remix";
-export interface BlogData {
-  authorName: string;
-  title: string;
-  authorId: number;
-  content: string;
-  publishDate: string;
-  comments: number;
-  tags: string[];
-  likes: number[];
-  id: number;
-  likeCount: number;
-  imgUrl: string;
-  authorImgUrl: string;
-  bookmarks: number[];
-}
+import { BlogData } from "~/types/BlogData";
 
 function BlogPost({
   authorName,
@@ -65,7 +51,7 @@ function BlogPost({
   useEffect(() => {
     setIsLiked(Liked());
     setIsBookmarked(BookMarked());
-  }, [likes, bookmarks]);
+  }, [Liked, BookMarked]);
 
   return (
     <div
@@ -121,28 +107,33 @@ function BlogPost({
           <div className="flex items-center justify-between text-sm  ">
             <div className="flex items-center space-x-4">
               <fetcher.Form
-                method={isLiked ? "DELETE" : "POST"}
-                action={isLiked ? "/api/removelike" : "/api/addlike"}
+                method={Liked() ? "DELETE" : "POST"}
+                action={Liked() ? "/api/removelike" : "/api/addlike"}
               >
-                <button
-                  className={`flex items-center space-x-2 ${
-                    isLiked ? "text-red-500" : "hover:text-red-500"
-                  } transition-colors duration-200`}
+                <div
+                  className={`flex items-center space-x-2 transition-colors duration-200`}
                 >
                   <input type="hidden" name="postId" value={id} />
                   <input type="hidden" name="userId" value={user?.id ?? ""} />
                   <div className="flex items-center space-x-1">
-                    <Heart
+                    <button
+                      type="submit"
                       onClick={() => {
                         setIsLiked(!isLiked);
                       }}
-                      type="submit"
-                      className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`}
-                    />
+                    >
+                      <Heart
+                        className={`h-5 w-5 ${
+                          isLiked
+                            ? "fill-current text-red-500"
+                            : "hover:text-red-500"
+                        }`}
+                      />
+                    </button>
                     <span className="text-xs">{likeCount}</span>
                   </div>
                   <span className="text-xs space-x-1 flex"></span>
-                </button>
+                </div>
               </fetcher.Form>
               <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors duration-200">
                 <MessageCircle className="h-5 w-5" />
