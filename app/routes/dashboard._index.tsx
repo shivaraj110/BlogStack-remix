@@ -203,41 +203,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="space-y-8">
-        <Link to={"/dashboard/bookmarks"}>
-          <div className="bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-white/5">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-green-500/10 rounded-xl">
-                <Bookmark className="w-6 h-6 text-green-500 dark:text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-white/60">
-                  Saved Posts
-                </p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {bookmarks}
-                </h3>
-              </div>
-            </div>
-          </div>
-        </Link>
-
-        <div className="bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-white/5">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-orange-500/10 rounded-xl">
-              <Clock className="w-6 h-6 text-orange-500 dark:text-orange-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-white/60">
-                Member Since
-              </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {format(new Date(joinedOn), "MMM yyyy")}
-              </h3>
-            </div>
-          </div>
-        </div>
-      </div>
       {/* Recent Blogs Section */}
       <div>
         <div className="flex items-center justify-between mb-4 md:mb-6">
