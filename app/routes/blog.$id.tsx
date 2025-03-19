@@ -9,9 +9,10 @@ import {
   Tag as TagIcon,
   User as UserIcon,
   Eye,
+  Image as ImageIcon,
 } from "lucide-react";
 import { prisma } from "~/.server/db";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PublicNavbar from "~/components/PublicNavbar";
 import PublicFooter from "~/components/PublicFooter";
 
@@ -105,6 +106,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
 const PublicBlog = () => {
   const { body } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+  const [imageError, setImageError] = useState(false);
 
   const blog: {
     id: number;
@@ -133,8 +135,10 @@ const PublicBlog = () => {
 
   const relatedPosts = body.relatedPosts;
 
-  // Break content into paragraphs
-  const paragraphs = blog.content.split("\n\n");
+  useEffect(() => {
+    // Scroll to top when blog loads
+    window.scrollTo(0, 0);
+  }, [blog.id]);
 
   // Function to share the blog post
   const shareBlog = () => {
@@ -150,18 +154,42 @@ const PublicBlog = () => {
     }
   };
 
+  // Format date for better display
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    };
+    return new Date(dateString).toLocaleDateString("en-US", options);
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
       <PublicNavbar />
 
-      <div className="flex-grow pb-20">
+      <div className="flex-grow pb-10 md:pb-20">
         {/* Hero Section with Blog Image */}
-        <div
-          className="w-full h-[50vh] bg-center bg-cover relative"
-          style={{ backgroundImage: `url(${blog.imgUrl})` }}
-        >
+        <div className="w-full h-[30vh] sm:h-[40vh] md:h-[50vh] relative">
+          {blog.imgUrl && !imageError ? (
+            <img
+              src={blog.imgUrl}
+              alt={blog.title}
+              className="w-full h-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+              <div className="text-center">
+                <ImageIcon className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                <h2 className="text-xl md:text-2xl text-white/80 px-4 max-w-md mx-auto">
+                  {blog.title}
+                </h2>
+              </div>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/70 to-[#0a0a0a]"></div>
-          <div className="absolute bottom-0 left-0 w-full p-8">
+          <div className="absolute bottom-0 left-0 w-full p-4 sm:p-6 md:p-8">
             <button
               onClick={() => navigate(-1)}
               className="flex items-center text-white/80 hover:text-white mb-4 transition-colors"
@@ -169,41 +197,46 @@ const PublicBlog = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </button>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 max-w-4xl">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 max-w-4xl">
               {blog.title}
             </h1>
-            <div className="flex flex-wrap gap-4 mb-6">
+            <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 sm:mb-6">
               <div className="flex items-center">
                 <img
                   src={blog.authorImgUrl}
                   alt={blog.author.name}
-                  className="w-10 h-10 rounded-full border border-white/20 mr-3"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-white/20 mr-2 sm:mr-3"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://via.placeholder.com/40";
+                  }}
                 />
-                <span className="text-white/90">{blog.author.name}</span>
+                <span className="text-white/90 text-sm sm:text-base">
+                  {blog.author.name}
+                </span>
               </div>
-              <div className="text-white/70 flex items-center">
-                <Calendar className="w-4 h-4 mr-1" />
-                <span>{blog.publishDate}</span>
+              <div className="text-white/70 flex items-center text-xs sm:text-sm">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span>{formatDate(blog.publishDate)}</span>
               </div>
-              <div className="text-white/70 flex items-center">
-                <Heart className="w-4 h-4 mr-1" />
+              <div className="text-white/70 flex items-center text-xs sm:text-sm">
+                <Heart className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 <span>{blog.likes.length} likes</span>
               </div>
-              <div className="text-white/70 flex items-center">
-                <MessageCircle className="w-4 h-4 mr-1" />
+              <div className="text-white/70 flex items-center text-xs sm:text-sm">
+                <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 <span>{blog.comments.length} comments</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="px-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              <div className="bg-[#111111] border border-white/5 rounded-xl shadow-xl overflow-hidden">
+              <div className="sm:p-8">
                 {/* Article Content */}
-                <div className="p-8">
+                <div className="">
                   <div
                     className="prose prose-lg prose-invert max-w-none"
                     dangerouslySetInnerHTML={{ __html: blog.content }}
@@ -211,12 +244,12 @@ const PublicBlog = () => {
                 </div>
 
                 {/* Tags */}
-                <div className="mt-8 mb-6 flex flex-wrap gap-2">
+                <div className="mt-6 mb-4 px-4 sm:px-6 md:px-8 flex flex-wrap gap-2">
                   {blog.tags.map((tag, index) => (
                     <Link
                       key={index}
                       to={`/blog/tag/${tag}`}
-                      className="flex items-center px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors"
+                      className="flex items-center px-2 py-1 text-xs sm:text-sm bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors"
                     >
                       <TagIcon className="w-3 h-3 mr-1" />
                       {tag}
@@ -225,21 +258,21 @@ const PublicBlog = () => {
                 </div>
 
                 {/* Action Bar */}
-                <div className="border-t border-white/10 pt-6 mt-6 flex justify-between items-center">
+                <div className="border-t border-white/10 px-4 sm:px-6 md:px-8 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-4">
                   <div className="flex items-center space-x-4">
                     <Link
                       to={`/dashboard/fullblog/${blog.id}`}
-                      className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors"
+                      className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors text-xs sm:text-sm"
                     >
-                      <Eye className="h-5 w-5" />
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                       <span>Read in dashboard</span>
                     </Link>
 
                     <button
                       onClick={shareBlog}
-                      className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors group"
+                      className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors group text-xs sm:text-sm"
                     >
-                      <Share2 className="h-5 w-5 group-hover:text-blue-400" />
+                      <Share2 className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-blue-400" />
                       <span>Share</span>
                     </button>
                   </div>
@@ -248,10 +281,13 @@ const PublicBlog = () => {
                     <img
                       src={blog.authorImgUrl}
                       alt={blog.author.name}
-                      className="w-10 h-10 rounded-full border border-white/10"
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-white/10"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://via.placeholder.com/40";
+                      }}
                     />
                     <div>
-                      <div className="text-sm font-medium">
+                      <div className="text-xs sm:text-sm font-medium">
                         {blog.author.name}
                       </div>
                       <div className="text-xs text-white/60">Author</div>
@@ -261,38 +297,40 @@ const PublicBlog = () => {
               </div>
 
               {/* Comments Section Preview */}
-              <div className="mt-8 bg-[#111111] border border-white/5 rounded-xl shadow-xl overflow-hidden">
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-6">
+              <div className="mt-4 sm:mt-6 lg:mt-8 bg-[#111111] border border-white/5 rounded-xl shadow-xl overflow-hidden">
+                <div className="p-4 sm:p-6">
+                  <h3 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">
                     Comments ({blog.comments.length})
                   </h3>
 
                   {/* Comment Login Prompt */}
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6">
-                    <p className="text-white/80 mb-2">
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                    <p className="text-white/80 text-sm sm:text-base mb-2">
                       Join the conversation and share your thoughts on this
                       post.
                     </p>
                     <Link
                       to={`/dashboard/fullblog/${blog.id}`}
-                      className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                      className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
                       Sign in to comment
                     </Link>
                   </div>
 
                   {/* Comments List Preview */}
-                  <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-4 sm:space-y-6 max-h-[300px] sm:max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {blog.comments.length === 0 ? (
-                      <div className="text-center p-8 text-white/50">
-                        <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                        <p>No comments yet. Be the first to comment!</p>
+                      <div className="text-center p-6 sm:p-8 text-white/50">
+                        <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 opacity-30" />
+                        <p className="text-sm sm:text-base">
+                          No comments yet. Be the first to comment!
+                        </p>
                       </div>
                     ) : (
                       blog.comments.slice(0, 3).map((comment) => (
                         <div
                           key={comment.id}
-                          className="border-b border-white/5 pb-6"
+                          className="border-b border-white/5 pb-4 sm:pb-6"
                         >
                           <div className="flex items-start gap-3">
                             <img
@@ -301,11 +339,15 @@ const PublicBlog = () => {
                                 "https://via.placeholder.com/40"
                               }
                               alt={comment.user.name}
-                              className="w-10 h-10 rounded-full border border-white/10"
+                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-white/10"
+                              onError={(e) => {
+                                e.currentTarget.src =
+                                  "https://via.placeholder.com/40";
+                              }}
                             />
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium">
+                                <span className="font-medium text-sm sm:text-base">
                                   {comment.user.name}
                                 </span>
                                 <span className="text-xs text-white/50">
@@ -318,7 +360,9 @@ const PublicBlog = () => {
                                   })}
                                 </span>
                               </div>
-                              <p className="text-white/80">{comment.comment}</p>
+                              <p className="text-white/80 text-sm sm:text-base">
+                                {comment.comment}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -329,7 +373,7 @@ const PublicBlog = () => {
                       <div className="text-center pt-2">
                         <Link
                           to={`/dashboard/fullblog/${blog.id}`}
-                          className="text-blue-400 hover:text-blue-300 transition-colors"
+                          className="text-blue-400 hover:text-blue-300 transition-colors text-sm"
                         >
                           View all {blog.comments.length} comments
                         </Link>
@@ -341,32 +385,39 @@ const PublicBlog = () => {
             </div>
 
             {/* Sidebar */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-4 sm:space-y-6">
               {/* Author Card */}
-              <div className="bg-[#111111] border border-white/5 rounded-xl shadow-xl overflow-hidden mb-6">
-                <div className="p-6">
-                  <h3 className="text-lg font-bold mb-4 border-b border-white/10 pb-2">
+              <div className="bg-[#111111] border border-white/5 rounded-xl shadow-xl overflow-hidden">
+                <div className="p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-bold mb-4 border-b border-white/10 pb-2">
                     About the Author
                   </h3>
                   <div className="flex items-center mb-4">
                     <img
                       src={blog.authorImgUrl}
                       alt={blog.author.name}
-                      className="w-16 h-16 rounded-full border-2 border-blue-500 mr-4"
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-blue-500 mr-3 sm:mr-4"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://via.placeholder.com/64";
+                      }}
                     />
                     <div>
-                      <h4 className="font-bold">{blog.author.name}</h4>
-                      <p className="text-white/70 text-sm">Content Creator</p>
+                      <h4 className="font-bold text-sm sm:text-base">
+                        {blog.author.name}
+                      </h4>
+                      <p className="text-white/70 text-xs sm:text-sm">
+                        Content Creator
+                      </p>
                     </div>
                   </div>
-                  <p className="text-white/80 text-sm mb-4">
+                  <p className="text-white/80 text-xs sm:text-sm mb-4">
                     Author of insightful articles and thought-provoking content.
                   </p>
                   <Link
                     to={`/dashboard`}
-                    className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors text-sm"
+                    className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors text-xs sm:text-sm"
                   >
-                    <UserIcon className="w-4 h-4 mr-1" />
+                    <UserIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                     Join BlogStack
                   </Link>
                 </div>
@@ -375,8 +426,8 @@ const PublicBlog = () => {
               {/* Related Posts */}
               {relatedPosts && relatedPosts.length > 0 && (
                 <div className="bg-[#111111] border border-white/5 rounded-xl shadow-xl overflow-hidden">
-                  <div className="p-6">
-                    <h3 className="text-lg font-bold mb-4 border-b border-white/10 pb-2">
+                  <div className="p-4 sm:p-6">
+                    <h3 className="text-base sm:text-lg font-bold mb-4 border-b border-white/10 pb-2">
                       Related Posts
                     </h3>
                     <div className="space-y-4">
@@ -385,8 +436,10 @@ const PublicBlog = () => {
                           id: number;
                           title: string;
                           imgUrl: string;
+                          publishDate: string;
                           author: { name: string };
                           likes: any[];
+                          tags: string[];
                         }) => (
                           <Link
                             key={post.id}
@@ -394,15 +447,29 @@ const PublicBlog = () => {
                             className="block group"
                           >
                             <div className="flex gap-3 items-start">
-                              <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                                <img
-                                  src={post.imgUrl}
-                                  alt={post.title}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                />
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
+                                {post.imgUrl ? (
+                                  <img
+                                    src={post.imgUrl}
+                                    alt={post.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                    onError={(e) => {
+                                      e.currentTarget.parentElement?.classList.add(
+                                        "bg-gradient-to-r",
+                                        "from-blue-500/20",
+                                        "to-purple-500/20"
+                                      );
+                                      e.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                                    <TagIcon className="w-6 h-6 text-blue-400" />
+                                  </div>
+                                )}
                               </div>
                               <div>
-                                <h4 className="font-medium line-clamp-2 group-hover:text-blue-400 transition-colors">
+                                <h4 className="font-medium text-sm sm:text-base line-clamp-2 group-hover:text-blue-400 transition-colors">
                                   {post.title}
                                 </h4>
                                 <div className="flex items-center gap-2 mt-1 text-xs text-white/60">
@@ -413,6 +480,11 @@ const PublicBlog = () => {
                                     {post.likes.length}
                                   </span>
                                 </div>
+                                {post.tags && post.tags.length > 0 && (
+                                  <span className="inline-block text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded mt-1">
+                                    {post.tags[0]}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </Link>
@@ -424,18 +496,18 @@ const PublicBlog = () => {
               )}
 
               {/* Join Banner */}
-              <div className="bg-blue-600 border border-blue-500 rounded-xl shadow-xl overflow-hidden mt-6">
-                <div className="p-6">
-                  <h3 className="text-lg font-bold mb-2">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 border border-blue-500 rounded-xl shadow-xl overflow-hidden">
+                <div className="p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-bold mb-2">
                     Join BlogStack Community
                   </h3>
-                  <p className="text-white/90 mb-4">
+                  <p className="text-white/90 text-xs sm:text-sm mb-4">
                     Create your own blog posts, engage with other writers, and
                     build your audience.
                   </p>
                   <Link
                     to="/dashboard"
-                    className="inline-block w-full text-center bg-white text-blue-600 font-medium py-2 px-4 rounded-lg hover:bg-white/90 transition-colors"
+                    className="inline-block w-full text-center bg-white text-blue-600 font-medium text-sm py-2 px-4 rounded-lg hover:bg-white/90 transition-colors"
                   >
                     Get Started
                   </Link>

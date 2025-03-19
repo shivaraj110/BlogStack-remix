@@ -97,8 +97,14 @@ export const loader = async (args: LoaderFunctionArgs) => {
 };
 
 function stripHtml(html: string): string {
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  return doc.body.textContent || "";
+  // Check if we're in the browser environment
+  if (typeof document !== "undefined") {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent || "";
+  }
+
+  // Server-side fallback - simple regex to strip HTML tags
+  return html.replace(/<[^>]*>?/gm, "");
 }
 
 export default function BlogsPage() {

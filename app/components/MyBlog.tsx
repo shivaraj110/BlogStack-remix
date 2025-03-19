@@ -5,6 +5,17 @@ import { useFetcher } from "@remix-run/react";
 import { useUser } from "@clerk/remix";
 import { BlogData } from "~/types/BlogData";
 
+function stripHtml(html: string): string {
+  // Check if we're in the browser environment
+  if (typeof document !== "undefined") {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent || "";
+  }
+
+  // Server-side fallback - simple regex to strip HTML tags
+  return html.replace(/<[^>]*>?/gm, "");
+}
+
 function MyBlogPost({
   authorName,
   title,
@@ -70,7 +81,8 @@ function MyBlogPost({
           </Link>
           <div className="text-sm grid grid-cols-3 mb-4">
             <div className="col-span-2">
-              {content.slice(0, 400) + (content.length < 400 ? "" : "...")}
+              {stripHtml(content).slice(0, 400) +
+                (content.length < 400 ? "" : "...")}
             </div>
             <div className="mx-auto">
               <img

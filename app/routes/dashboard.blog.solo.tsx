@@ -108,8 +108,8 @@ const Solo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-6 mt-10">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-6">
+      <div className="">
         {/* Header */}
         <div className="mb-8">
           <Link

@@ -36,8 +36,14 @@ interface LoaderData {
 }
 
 function stripHtml(html: string): string {
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  return doc.body.textContent || "";
+  // Check if we're in the browser environment
+  if (typeof document !== "undefined") {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent || "";
+  }
+
+  // Server-side fallback - simple regex to strip HTML tags
+  return html.replace(/<[^>]*>?/gm, "");
 }
 
 export const loader = async (args: LoaderFunctionArgs) => {
@@ -125,42 +131,40 @@ export default function DashboardPage() {
   const { posts, bookmarks, joinedOn, blogs, pagination } = body;
 
   return (
-    <div className="space-y-8 mt-10">
+    <div className="space-y-8">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-[#0a0a0a] to-[#1a1a1a] rounded-3xl p-8 text-white border border-white/5">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">
+      <div className="bg-gradient-to-r from-[#0a0a0a] to-[#1a1a1a] rounded-2xl p-6 md:p-8 text-white border border-white/5">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 md:mb-4">
           Welcome back,{" "}
           <span className="text-blue-400">
             {user?.firstName || user?.username}
           </span>
           !
         </h1>
-        <p className="text-lg text-white/90 mb-6">
+        <p className="text-base md:text-lg text-white/90 mb-5 md:mb-6">
           Discover the latest insights and share your knowledge with the
           community.
         </p>
         <Link
           to="/dashboard/blog/solo"
-          className="inline-flex items-center space-x-2 bg-blue-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-600 transition-colors"
+          className="inline-flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-xl font-medium hover:bg-blue-600 transition-colors"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4 md:w-5 md:h-5" />
           <span>Write a new blog</span>
         </Link>
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link to={"/dashboard/myblogs"}>
-          <div className="bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-white/5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <Link to="/dashboard/myblogs" className="block">
+          <div className="bg-[#111111] p-5 md:p-6 rounded-xl shadow border border-white/5 hover:border-blue-500/30 hover:bg-[#131313] transition-all">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-blue-500/10 rounded-xl">
-                <TrendingUp className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+                <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-white/60">
-                  Your Posts
-                </p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm text-white/60">Your Posts</p>
+                <h3 className="text-xl md:text-2xl font-bold text-white">
                   {posts}
                 </h3>
               </div>
@@ -168,17 +172,15 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        <Link to={"/dashboard/bookmarks"}>
-          <div className="bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-white/5">
+        <Link to="/dashboard/bookmarks" className="block">
+          <div className="bg-[#111111] p-5 md:p-6 rounded-xl shadow border border-white/5 hover:border-green-500/30 hover:bg-[#131313] transition-all">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-green-500/10 rounded-xl">
-                <Bookmark className="w-6 h-6 text-green-500 dark:text-green-400" />
+                <Bookmark className="w-5 h-5 md:w-6 md:h-6 text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-white/60">
-                  Saved Posts
-                </p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm text-white/60">Saved Posts</p>
+                <h3 className="text-xl md:text-2xl font-bold text-white">
                   {bookmarks}
                 </h3>
               </div>
@@ -186,16 +188,14 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        <div className="bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-white/5">
+        <div className="bg-[#111111] p-5 md:p-6 rounded-xl shadow border border-white/5 sm:col-span-2 lg:col-span-1">
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-orange-500/10 rounded-xl">
-              <Clock className="w-6 h-6 text-orange-500 dark:text-orange-400" />
+              <Clock className="w-5 h-5 md:w-6 md:h-6 text-orange-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-white/60">
-                Member Since
-              </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-sm text-white/60">Member Since</p>
+              <h3 className="text-xl md:text-2xl font-bold text-white">
                 {format(new Date(joinedOn), "MMM yyyy")}
               </h3>
             </div>
@@ -205,118 +205,62 @@ export default function DashboardPage() {
 
       {/* Recent Blogs Section */}
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-white">
             Recent Blogs
           </h2>
           <Link
             to="/dashboard/blogs"
-            className="text-sm font-medium text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+            className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center"
           >
-            View all →
+            View all <span className="ml-1">→</span>
           </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {blogs.map((blog) => (
-            <Link to={`/dashboard/fullblog/${blog.id}`} key={blog.id}>
-              <article className="group bg-white dark:bg-[#0a0a0a] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-white/5">
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={
-                      blog.imgUrl ||
-                      "https://images.unsplash.com/photo-1461749280684-dccba630be2e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
-                    }
-                    alt={blog.title}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-blue-500/90 text-white text-sm rounded-full">
-                      {blog.tags[0] || "Technology"}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
-                    {blog.title}
-                  </h2>
-                  <p className="text-gray-600 dark:text-white/60 text-sm mb-4 line-clamp-2">
-                    {stripHtml(blog.content).substring(0, 120)}
-                  </p>
-                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-white/60 mb-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <img
-                          src={
-                            blog.author.pfpUrl ||
-                            "https://via.placeholder.com/32"
-                          }
-                          alt={blog.author.name || "Anonymous"}
-                          className="w-6 h-6 rounded-full"
-                        />
-                        <span>{blog.author.name || "Anonymous"}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <span>
-                          {format(new Date(blog.publishDate), "MMM d")}
-                        </span>
-                      </div>
-                    </div>
-                    <button className="p-1 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
-                      <Bookmark className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {blog._count.likes}
-                        </span>
-                        <span className="text-sm text-gray-500 dark:text-white/60">
-                          likes
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {blog._count.comments}
-                        </span>
-                        <span className="text-sm text-gray-500 dark:text-white/60">
-                          comments
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-sm font-medium text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
-                      Read more →
-                    </span>
-                  </div>
-                </div>
-              </article>
-            </Link>
+            <BlogCard
+              key={blog.id}
+              id={blog.id}
+              title={blog.title}
+              content={blog.content}
+              likes={blog._count.likes}
+              comments={blog._count.comments}
+              likeCount={blog._count.likes}
+              authorName={blog.author.name || "Anonymous"}
+              authorImgUrl={blog.author.pfpUrl || ""}
+              authorId={0}
+              tags={blog.tags}
+              publishDate={blog.publishDate}
+              imgUrl={blog.imgUrl}
+              bookmarked={false}
+              bookmarks={[]}
+            />
           ))}
         </div>
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="flex justify-center items-center space-x-2 mt-8">
+          <div className="flex justify-center items-center space-x-2 mt-6 md:mt-8">
             <Link
               to={`?page=${pagination.currentPage - 1}`}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm font-medium transition-colors ${
                 pagination.hasPrevPage
-                  ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
-                  : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
+                  ? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
+                  : "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
               }`}
               onClick={(e) => !pagination.hasPrevPage && e.preventDefault()}
             >
               Previous
             </Link>
-            <span className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white">
+            <span className="px-3 py-2 md:px-4 md:py-2 text-sm font-medium text-white">
               Page {pagination.currentPage} of {pagination.totalPages}
             </span>
             <Link
               to={`?page=${pagination.currentPage + 1}`}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm font-medium transition-colors ${
                 pagination.hasNextPage
-                  ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
-                  : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
+                  ? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
+                  : "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
               }`}
               onClick={(e) => !pagination.hasNextPage && e.preventDefault()}
             >

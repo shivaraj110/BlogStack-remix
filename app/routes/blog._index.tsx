@@ -127,8 +127,15 @@ export default function BlogIndex() {
 
   // Function to truncate text with ellipsis
   const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + "...";
+    // Strip HTML tags
+    const plainText =
+      typeof document !== "undefined"
+        ? new DOMParser().parseFromString(text, "text/html").body.textContent ||
+          ""
+        : text.replace(/<[^>]*>?/gm, "");
+
+    if (plainText.length <= maxLength) return plainText;
+    return plainText.slice(0, maxLength) + "...";
   };
 
   // Function to handle search form submission
