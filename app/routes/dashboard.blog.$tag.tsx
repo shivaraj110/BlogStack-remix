@@ -112,11 +112,11 @@ export default function () {
               content={b.content}
               tags={!b.tags ? ["notags"] : b.tags}
               publishDate={b.publishDate ? b.publishDate : "no trace"}
-              likes={likedPosts}
+              likes={likedPosts.length}
               comments={b.comments.length}
               likeCount={b.likes.length}
               id={Number(b.id)}
-              bookmarks={bookmarkIds}
+              bookmarked={true}
             />
           ))}
         </div>

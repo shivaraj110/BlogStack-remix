@@ -11,6 +11,5 @@ export interface BlogData {
 	likeCount: number;
 	imgUrl: string;
 	authorImgUrl: string;
-	bookmarks: number[];
 	bookmarked: boolean;
 }
