@@ -47,30 +47,25 @@ export default function() {
 	}
 
 	return (
-		<div className="p-1 mt-12 mx-auto">
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-				<div className="mt-6">
-					{blogs.map((b) => (
-						<BlogCard
-							authorId={b.post.authorId}
-							comments={b.post.comments.length}
-							likeCount={b.post.likes.length}
-							key={b.post.id}
-							imgUrl={b.post.imgUrl}
-							authorImgUrl={b.post.authorImgUrl}
-							authorName={b.post.authorName || "Anonymous"}
-							title={b.post.title}
-							content={b.post.content}
-							tags={!b.post.tags ? ["notags"] : b.post.tags}
-							publishDate={b.post.publishDate ? b.post.publishDate : "no trace"}
-							likes={likedPosts.length}
-							id={Number(b.post.id)}
-							bookmarked={true}
-						/>
-					))}
-				</div>
-			</div>
+		<div className="grid grid-cols-1 mt-10 md:grid-cols-2 lg:grid-cols-3 gap-6">
+			{blogs.map((b) => (
+				<BlogCard
+					authorId={b.post.authorId}
+					comments={b.post.comments.length}
+					likeCount={b.post.likes.length}
+					key={b.post.id}
+					imgUrl={b.post.imgUrl}
+					authorImgUrl={b.post.authorImgUrl}
+					authorName={b.post.authorName || "Anonymous"}
+					title={b.post.title}
+					content={b.post.content}
+					tags={!b.post.tags ? ["notags"] : b.post.tags}
+					publishDate={b.post.publishDate ? b.post.publishDate : "no trace"}
+					likes={likedPosts.length}
+					id={Number(b.post.id)}
+					bookmarked={true}
+				/>
+			))}
 		</div>
 	);
 }

@@ -144,37 +144,48 @@ export default function DashboardPage() {
 			</div>
 
 			{/* Stats Section */}
+
+
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<div className="bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-white/5">
-					<div className="flex items-center space-x-4">
-						<div className="p-3 bg-blue-500/10 rounded-xl">
-							<TrendingUp className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-						</div>
-						<div>
-							<p className="text-sm text-gray-500 dark:text-white/60">
-								Your Posts
-							</p>
-							<h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-								{posts}
-							</h3>
-						</div>
-					</div>
-				</div>
-				<div className="bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-white/5">
-					<div className="flex items-center space-x-4">
-						<div className="p-3 bg-green-500/10 rounded-xl">
-							<Bookmark className="w-6 h-6 text-green-500 dark:text-green-400" />
-						</div>
-						<div>
-							<p className="text-sm text-gray-500 dark:text-white/60">
-								Saved Posts
-							</p>
-							<h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-								{bookmarks}
-							</h3>
+				<Link
+					to={"/dashboard/myblogs"}
+				>
+					<div className="bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-white/5">
+						<div className="flex items-center space-x-4">
+							<div className="p-3 bg-blue-500/10 rounded-xl">
+								<TrendingUp className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+							</div>
+							<div>
+								<p className="text-sm text-gray-500 dark:text-white/60">
+									Your Posts
+								</p>
+								<h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+									{posts}
+								</h3>
+							</div>
 						</div>
 					</div>
-				</div>
+				</Link>
+
+				<Link to={"/dashboard/bookmarks"}>
+
+					<div className="bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-white/5">
+						<div className="flex items-center space-x-4">
+							<div className="p-3 bg-green-500/10 rounded-xl">
+								<Bookmark className="w-6 h-6 text-green-500 dark:text-green-400" />
+							</div>
+							<div>
+								<p className="text-sm text-gray-500 dark:text-white/60">
+									Saved Posts
+								</p>
+								<h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+									{bookmarks}
+								</h3>
+							</div>
+						</div>
+					</div>
+				</Link>
+
 				<div className="bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-white/5">
 					<div className="flex items-center space-x-4">
 						<div className="p-3 bg-orange-500/10 rounded-xl">
