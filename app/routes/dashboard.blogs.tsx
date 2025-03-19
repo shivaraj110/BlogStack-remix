@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { prisma } from "~/.server/db";
 import { Plus, Search, Filter, Bookmark } from "lucide-react";
 import type { Post, User } from "@prisma/client";
+import BlogCard from "~/components/Blog";
 
 interface PostWithAuthor extends Post {
   author: {
@@ -139,80 +140,21 @@ export default function BlogsPage() {
       {/* Blogs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {blogs.map((blog) => (
-          <article
-            key={blog.id}
-            className="group bg-white dark:bg-[#0a0a0a] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-white/5"
-          >
-            <div className="relative h-48 overflow-hidden">
-              <img
-                src={
-                  blog.imgUrl ||
-                  "https://images.unsplash.com/photo-1461749280684-dccba630be2e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
-                }
-                alt={blog.title}
-                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute top-4 left-4">
-                <span className="px-3 py-1 bg-blue-500/90 text-white text-sm rounded-full">
-                  {blog.tags[0] || "Technology"}
-                </span>
-              </div>
-            </div>
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
-                {blog.title}
-              </h2>
-              <p className="text-gray-600 dark:text-white/60 text-sm mb-4 line-clamp-2">
-                {blog.content}
-              </p>
-              <div className="flex items-center justify-between text-sm text-gray-500 dark:text-white/60 mb-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-1">
-                    <img
-                      src={
-                        blog.author.pfpUrl || "https://via.placeholder.com/32"
-                      }
-                      alt={blog.author.name || "Anonymous"}
-                      className="w-6 h-6 rounded-full"
-                    />
-                    <span>{blog.author.name || "Anonymous"}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <span>{format(new Date(blog.publishDate), "MMM d")}</span>
-                  </div>
-                </div>
-                <button className="p-1 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
-                  <Bookmark className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {blog._count.likes}
-                    </span>
-                    <span className="text-sm text-gray-500 dark:text-white/60">
-                      likes
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {blog._count.comments}
-                    </span>
-                    <span className="text-sm text-gray-500 dark:text-white/60">
-                      comments
-                    </span>
-                  </div>
-                </div>
-                <Link
-                  to={`/blog/${blog.id}`}
-                  className="text-sm font-medium text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
-                >
-                  Read more →
-                </Link>
-              </div>
-            </div>
-          </article>
+          <BlogCard
+            id={blog.id}
+            title={blog.title}
+            content={blog.content}
+            likes={blog._count.likes}
+            comments={blog._count.comments}
+            likeCount={23}
+            authorName={blog.author.name ?? ""}
+            authorImgUrl={blog.authorImgUrl}
+            authorId={0}
+            tags={blog.tags}
+            publishDate={blog.publishDate}
+            imgUrl={blog.imgUrl}
+            bookmarks={[]}
+          />
         ))}
       </div>
 
@@ -221,11 +163,10 @@ export default function BlogsPage() {
         <div className="flex justify-center items-center space-x-2 mt-8">
           <Link
             to={`?page=${pagination.currentPage - 1}`}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              pagination.hasPrevPage
-                ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
-                : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
-            }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasPrevPage
+              ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
+              : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
+              }`}
             onClick={(e) => !pagination.hasPrevPage && e.preventDefault()}
           >
             Previous
@@ -235,11 +176,10 @@ export default function BlogsPage() {
           </span>
           <Link
             to={`?page=${pagination.currentPage + 1}`}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              pagination.hasNextPage
-                ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
-                : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
-            }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasNextPage
+              ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
+              : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
+              }`}
             onClick={(e) => !pagination.hasNextPage && e.preventDefault()}
           >
             Next
