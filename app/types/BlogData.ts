@@ -1,15 +1,16 @@
 export interface BlogData {
-  authorName: string;
-  title: string;
-  authorId: number;
-  content: string;
-  publishDate: string;
-  comments: number;
-  tags: string[];
-  likes: number[];
-  id: number;
-  likeCount: number;
-  imgUrl: string;
-  authorImgUrl: string;
-  bookmarks: number[];
+	authorName: string;
+	title: string;
+	authorId: number;
+	content: string;
+	publishDate: string;
+	comments: number;
+	tags: string[];
+	likes: number;
+	id: number;
+	likeCount: number;
+	imgUrl: string;
+	authorImgUrl: string;
+	bookmarks: number[];
+	bookmarked: boolean;
 }

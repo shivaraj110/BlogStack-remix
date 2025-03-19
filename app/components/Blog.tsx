@@ -1,190 +1,82 @@
-import { useCallback, useEffect, useState } from "react";
-import { Bookmark, Heart, MessageCircle, Share2 } from "lucide-react";
-import { Fetcher, Link, useFetcher, useSearchParams } from "@remix-run/react";
-import { useUser } from "@clerk/remix";
+import { Link } from "@remix-run/react";
+import { format } from "date-fns";
+import { Bookmark } from "lucide-react";
 import { BlogData } from "~/types/BlogData";
+const BlogCard = (blog: BlogData) => {
+	return <article
+		key={blog.id}
+		className="group bg-white dark:bg-[#0a0a0a] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-white/5"
+	>
+		<div className="relative h-48 overflow-hidden">
+			<img
+				src={
+					blog.imgUrl ||
+					"https://images.unsplash.com/photo-1461749280684-dccba630be2e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+				}
+				alt={blog.title}
+				className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+			/>
+			<div className="absolute top-4 left-4">
+				<span className="px-3 py-1 bg-blue-500/90 text-white text-sm rounded-full">
+					{blog.tags[0] || "Technology"}
+				</span>
+			</div>
+		</div>
+		<div className="p-6">
+			<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
+				{blog.title}
+			</h2>
+			<p className="text-gray-600 dark:text-white/60 text-sm mb-4 line-clamp-2">
+				{blog.content}
+			</p>
+			<div className="flex items-center justify-between text-sm text-gray-500 dark:text-white/60 mb-4">
+				<div className="flex items-center space-x-4">
+					<div className="flex items-center space-x-1">
+						<img
+							src={
+								blog.authorImgUrl || "https://via.placeholder.com/32"
+							}
+							alt={blog.authorName || "Anonymous"}
+							className="w-6 h-6 rounded-full"
+						/>
+						<span>{blog.authorName || "Anonymous"}</span>
+					</div>
+					<div className="flex items-center space-x-1">
+						<span>{format(new Date(blog.publishDate), "MMM d")}</span>
+					</div>
+				</div>
+				<button className="p-1 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
+					<Bookmark className={`w-4 h-4 text-blue-500 ${blog.bookmarked ? "fill-current" : ""}`} />
+				</button>
+			</div>
+			<div className="flex items-center justify-between">
+				<div className="flex items-center space-x-4">
+					<div className="flex items-center space-x-1">
+						<span className="text-sm font-medium text-gray-900 dark:text-white">
+							{blog.likes}
+						</span>
+						<span className="text-sm text-gray-500 dark:text-white/60">
+							likes
+						</span>
+					</div>
+					<div className="flex items-center space-x-1">
+						<span className="text-sm font-medium text-gray-900 dark:text-white">
+							{blog.comments}
+						</span>
+						<span className="text-sm text-gray-500 dark:text-white/60">
+							comments
+						</span>
+					</div>
+				</div>
+				<Link
+					to={`dashboard/fullblog/${blog.id}`}
+					className="text-sm font-medium text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+				>
+					Read more →
+				</Link>
+			</div>
+		</div>
+	</article>
 
-function BlogPost({
-  authorName,
-  authorId,
-  title,
-  content,
-  publishDate,
-  comments,
-  tags,
-  likes,
-  likeCount,
-  id,
-  authorImgUrl,
-  imgUrl,
-  bookmarks,
-}: BlogData) {
-  const { user } = useUser();
-
-  const BookMarked = () => {
-    let val = false;
-    bookmarks.map((b) => {
-      if (b === id) {
-        val = true;
-      }
-    });
-    return val;
-  };
-
-  const Liked = () => {
-    let val = false;
-    likes.map((l) => {
-      if (l === id) {
-        val = true;
-      }
-    });
-    return val;
-  };
-
-  const [isLiked, setIsLiked] = useState<boolean>(Liked);
-  const [isBookmarked, setIsBookmarked] = useState<boolean>(BookMarked);
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const theme = searchParams.get("theme");
-  const fetcher = useFetcher<Fetcher>();
-
-  useEffect(() => {
-    setIsLiked(Liked());
-    setIsBookmarked(BookMarked());
-  }, [Liked(), BookMarked()]);
-
-  return (
-    <div
-      className={`bg-white/25 dark:bg-[#0a0a0a]/25 backdrop-brightness-95 backdrop-blur-sm rounded-lg border dark:border-white/10 transi border-gray-200 overflow-hidden my-4`}
-    >
-      <div className="p-5">
-        <div className="flex items-center mb-4">
-          <Link to={`/dashboard/profile/${authorId}`}>
-            <img
-              className="h-9 w-9 object-scale-down rounded-full border-2 border-blue-500 mr-2"
-              src={authorImgUrl}
-              alt={authorName}
-            />
-          </Link>
-          <div>
-            <h2 className="text-base font-medium dark:text-white">
-              {authorName}
-            </h2>
-            <p className="text-xs dark:text-gray-400">{publishDate}</p>
-          </div>
-        </div>
-        <div className="md:pl-10">
-          <Link to={`/dashboard/fullblog/${id}`}>
-            <h1 className="text-2xl font-bold mb-2 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors duration-200 dark:text-white">
-              {title}
-            </h1>
-          </Link>
-          <div className="text-sm grid grid-cols-3 gap-3 mb-4">
-            <div className="col-span-2 dark:text-gray-300">
-              {content.slice(0, 600) + (content.length < 600 ? "" : "...")}
-            </div>
-            <div className="mx-auto col-span-1 pl-5">
-              <img
-                src={imgUrl}
-                alt="BlogImage"
-                className="cursor-pointer object-scale-down size-full border dark:border-white/10 rounded-lg col-span-1"
-              />
-            </div>
-          </div>
-          <div className="flex flex-wrap justify-between mb-4">
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag, index) => (
-                <Link
-                  to={`/dashboard/blog/${tag}`}
-                  key={index}
-                  className="text-xs text-blue-600 rounded px-2 py-1 mb-2 hover:bg-blue-200  transition-colors duration-200"
-                >
-                  #{tag}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center justify-between text-sm  ">
-            <div className="flex items-center space-x-4">
-              <fetcher.Form
-                method={Liked() ? "DELETE" : "POST"}
-                action={Liked() ? "/api/removelike" : "/api/addlike"}
-              >
-                <div
-                  className={`flex items-center space-x-2 transition-colors duration-200`}
-                >
-                  <input type="hidden" name="postId" value={id} />
-                  <input type="hidden" name="userId" value={user?.id ?? ""} />
-                  <div className="flex items-center space-x-1">
-                    <button
-                      type="submit"
-                      onClick={() => {
-                        setIsLiked(!isLiked);
-                      }}
-                    >
-                      <Heart
-                        className={`h-5 w-5 ${
-                          isLiked
-                            ? "fill-current text-red-500"
-                            : "hover:text-red-500"
-                        }`}
-                      />
-                    </button>
-                    <span className="text-xs">{likeCount}</span>
-                  </div>
-                  <span className="text-xs space-x-1 flex"></span>
-                </div>
-              </fetcher.Form>
-              <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors duration-200">
-                <MessageCircle className="h-5 w-5" />
-                <span>{comments} Comments</span>
-              </button>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link to={`/dashboard/fullblog/${id}`}>
-                <span className="text-xs text-blue-600  rounded-full px-2 py-1 cursor-pointer">
-                  Read more..
-                </span>
-              </Link>
-              <span className="text-xs text-blue-600  rounded-full px-2 py-1">
-                {Math.floor(content.split(" ").length / 60) + " mins read"}
-              </span>
-              <fetcher.Form
-                method={isBookmarked ? "DELETE" : "POST"}
-                action={isBookmarked ? "/removebookmarks" : "/addbookmark"}
-              >
-                <input type="hidden" name="userId" value={user?.id ?? ""} />
-                <button
-                  onClick={() => {
-                    setTimeout(() => {
-                      setIsBookmarked(!isBookmarked);
-                    }, 1000);
-                  }}
-                  type="submit"
-                  name="postId"
-                  value={id}
-                  className={`${
-                    isBookmarked ? "text-blue-500" : "hover:text-blue-500"
-                  } transition-colors duration-200`}
-                >
-                  <Bookmark
-                    className={`h-5 w-5 ${
-                      isBookmarked ? "fill-current" : "fill-none"
-                    }`}
-                  />
-                </button>
-              </fetcher.Form>
-
-              <button className="hover:text-green-500 transition-colors duration-200">
-                <Share2 className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
-
-export default BlogPost;
-//370*245
+export default BlogCard
