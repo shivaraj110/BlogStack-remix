@@ -1,19 +1,45 @@
 import { Link } from "react-router-dom";
 import { BookOpen, Pencil, Users } from "lucide-react";
 import { SignInButton, SignUpButton } from "@clerk/remix";
+import { useEffect, useState } from "react";
+import { prisma } from "~/.server/db";
+
 export default function LandingComp() {
-  const blogs = [
+  const [featuredBlogs, setFeaturedBlogs] = useState([
     {
       id: 1,
-      title: "featured blog",
-      content: "content of featured blog",
+      title: "The Future of Web Development",
+      content:
+        "Exploring the latest trends and technologies shaping the future of web development...",
+      imgUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
       author: {
-        name: "John",
+        name: "John Doe",
       },
-      publishDate: "12/12/2023",
+      publishDate: "May 15, 2023",
     },
-  ];
-  let featuredBlogs = [blogs[0], blogs[0], blogs[0]];
+    {
+      id: 2,
+      title: "Getting Started with React",
+      content:
+        "A beginner's guide to React and its core concepts. Learn how to build your first React application...",
+      imgUrl: "https://images.unsplash.com/photo-1633356122102-3fe601e05bd2",
+      author: {
+        name: "Sarah Smith",
+      },
+      publishDate: "June 22, 2023",
+    },
+    {
+      id: 3,
+      title: "Optimizing Database Performance",
+      content:
+        "Tips and techniques for improving database performance in high-traffic applications...",
+      imgUrl: "https://images.unsplash.com/photo-1544383835-bda2bc66a55d",
+      author: {
+        name: "Michael Chen",
+      },
+      publishDate: "July 8, 2023",
+    },
+  ]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-r from-blue-600 to-blue-800">
@@ -34,6 +60,16 @@ export default function LandingComp() {
               {" "}
               <ul className="flex flex-wrap justify-center poppins-regular space-x-4">
                 {" "}
+                <li>
+                  {" "}
+                  <Link
+                    to="/blog"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    {" "}
+                    Blog{" "}
+                  </Link>{" "}
+                </li>{" "}
                 <li>
                   {" "}
                   <Link
@@ -81,13 +117,22 @@ export default function LandingComp() {
               Elevate your writing, connect with readers, and build your online
               presence with our powerful blogging platform.{" "}
             </p>{" "}
-            <Link
-              to="/signup"
-              className="inline-block px-6 py-3 bg-white/30 hover:bg-white/60 border-[1.5px] backdrop-blur-lg hover:text-gray-700/90 text-white/90 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              {" "}
-              Get Started{" "}
-            </Link>{" "}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/signup"
+                className="inline-block px-6 py-3 bg-white/30 hover:bg-white/60 border-[1.5px] backdrop-blur-lg hover:text-gray-700/90 text-white/90 font-semibold rounded-lg transition-colors"
+              >
+                {" "}
+                Get Started{" "}
+              </Link>{" "}
+              <Link
+                to="/blog"
+                className="inline-block px-6 py-3 bg-blue-800/50 hover:bg-blue-800/70 border-[1.5px] border-blue-400/30 backdrop-blur-lg text-white/90 font-semibold rounded-lg transition-colors"
+              >
+                {" "}
+                Read Blogs{" "}
+              </Link>{" "}
+            </div>
           </div>{" "}
         </section>{" "}
         <section className="py-16 poppins-light">
@@ -142,7 +187,7 @@ export default function LandingComp() {
             </div>{" "}
           </div>{" "}
         </section>{" "}
-        <section className="py-16  poppins-light">
+        <section className="py-16 poppins-light">
           {" "}
           <div className="container mx-auto px-4">
             {" "}
@@ -155,28 +200,30 @@ export default function LandingComp() {
               {featuredBlogs.map((post) => (
                 <div
                   key={post?.id}
-                  className="bg-white border-[1.5px] bg-white/60 backdrop-blur-sm rounded-lg hover:-translate-y-4 transi  shadow-md overflow-hidden"
+                  className="bg-white/60 border-[1.5px] backdrop-blur-sm rounded-lg hover:-translate-y-4 transi shadow-md overflow-hidden"
                 >
-                  {" "}
+                  <div className="h-48 overflow-hidden">
+                    <img
+                      src={post.imgUrl}
+                      alt={post.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <div className="p-6">
                     {" "}
-                    <h3 className="text-xl font-semibold text-gray-500 mb-2">
-                      {" "}
-                      {}{" "}
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                      {post.title}
                     </h3>{" "}
-                    <p className="text-gray-700 mb-4">
-                      {post?.content
-                        ? post?.content.slice(0, 100) + "..."
-                        : "loading..."}
-                    </p>{" "}
+                    <p className="text-gray-700 mb-4">{post.content}</p>{" "}
                     <div className="flex justify-between items-center">
                       {" "}
                       <div className="text-sm text-gray-500">
                         {" "}
-                        <p>{post?.author.name}</p> <p>{post?.publishDate}</p>{" "}
+                        <p className="font-medium">{post?.author.name}</p>
+                        <p>{post?.publishDate}</p>{" "}
                       </div>{" "}
                       <Link
-                        to={`/blog/${Number(post?.id)}`}
+                        to={`/blog/${post?.id}`}
                         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                       >
                         {" "}
@@ -189,22 +236,23 @@ export default function LandingComp() {
             </div>{" "}
           </div>{" "}
         </section>{" "}
-        <Link
-          to={`/blogs`}
-          className="px-4 py-2 bg-blue-600 text-white rounded max-w-32 mx-auto text-center bg-white/30 font-semibold hover:bg-white/60 border-[1.5px] backdrop-blur-lg hover:text-gray-700/90 text-white/90 mb-8 flex flex-col hover:bg-blue-700 transition-colors"
-        >
-          {" "}
-          More posts{" "}
-        </Link>{" "}
+        <div className="flex justify-center mb-12">
+          <Link
+            to="/blog"
+            className="px-6 py-3 bg-white/30 hover:bg-white/60 border-[1.5px] backdrop-blur-lg hover:text-gray-700/90 text-white/90 font-semibold rounded-lg transition-colors"
+          >
+            Explore All Posts
+          </Link>{" "}
+        </div>
         <section className="py-16 poppins-light bg-gray-100">
           {" "}
           <div className="container mx-auto px-4 text-center">
             {" "}
-            <h2 className="text-3xl font-bold mb-6 text-gray-500 ">
+            <h2 className="text-3xl font-bold mb-6 text-gray-800">
               {" "}
               Stay Updated{" "}
             </h2>{" "}
-            <p className="mb-8 max-w-2xl mx-auto text-gray-500 ">
+            <p className="mb-8 max-w-2xl mx-auto text-gray-600">
               {" "}
               Subscribe to our newsletter for the latest blogging tips, feature
               updates, and community highlights.{" "}
@@ -248,30 +296,26 @@ export default function LandingComp() {
                 {" "}
                 <li>
                   {" "}
-                  <Link to="/about" className="text-sm hover:underline">
-                    {" "}
-                    About Us{" "}
+                  <Link to="/blog" className="hover:underline">
+                    Blog
                   </Link>{" "}
                 </li>{" "}
                 <li>
                   {" "}
-                  <Link to="/features" className="text-sm hover:underline">
-                    {" "}
-                    Features{" "}
+                  <Link to="/about" className="hover:underline">
+                    About
                   </Link>{" "}
                 </li>{" "}
                 <li>
                   {" "}
-                  <Link to="/pricing" className="text-sm hover:underline">
-                    {" "}
-                    Pricing{" "}
+                  <Link to="/contact" className="hover:underline">
+                    Contact
                   </Link>{" "}
                 </li>{" "}
                 <li>
                   {" "}
-                  <Link to="/contact" className="text-sm hover:underline">
-                    {" "}
-                    Contact{" "}
+                  <Link to="/signup" className="hover:underline">
+                    Sign Up
                   </Link>{" "}
                 </li>{" "}
               </ul>{" "}
@@ -281,7 +325,6 @@ export default function LandingComp() {
               <h3 className="text-lg font-semibold mb-4">Legal</h3>{" "}
               <ul className="space-y-2">
                 {" "}
-                get
                 <li>
                   {" "}
                   <Link to="/privacy" className="text-sm hover:underline">
