@@ -279,7 +279,7 @@ const FullBlog = () => {
               {/* Article Content */}
               <div className="p-4 sm:p-6 md:p-8">
                 <div
-                  className="prose prose-sm sm:prose md:prose-lg prose-invert max-w-none"
+                  className="prose prose-lg prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: blog.content }}
                 />
               </div>
