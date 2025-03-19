@@ -204,63 +204,57 @@ const PublicBlog = () => {
               <div className="bg-[#111111] border border-white/5 rounded-xl shadow-xl overflow-hidden">
                 {/* Article Content */}
                 <div className="p-8">
-                  <div className="prose prose-lg prose-invert max-w-none">
-                    {paragraphs.map((paragraph, index) => (
-                      <p
-                        key={index}
-                        className="text-white/90 mb-6 leading-relaxed"
-                      >
-                        {paragraph}
-                      </p>
-                    ))}
+                  <div
+                    className="prose prose-lg prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: blog.content }}
+                  />
+                </div>
+
+                {/* Tags */}
+                <div className="mt-8 mb-6 flex flex-wrap gap-2">
+                  {blog.tags.map((tag, index) => (
+                    <Link
+                      key={index}
+                      to={`/blog/tag/${tag}`}
+                      className="flex items-center px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors"
+                    >
+                      <TagIcon className="w-3 h-3 mr-1" />
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Action Bar */}
+                <div className="border-t border-white/10 pt-6 mt-6 flex justify-between items-center">
+                  <div className="flex items-center space-x-4">
+                    <Link
+                      to={`/dashboard/fullblog/${blog.id}`}
+                      className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors"
+                    >
+                      <Eye className="h-5 w-5" />
+                      <span>Read in dashboard</span>
+                    </Link>
+
+                    <button
+                      onClick={shareBlog}
+                      className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors group"
+                    >
+                      <Share2 className="h-5 w-5 group-hover:text-blue-400" />
+                      <span>Share</span>
+                    </button>
                   </div>
 
-                  {/* Tags */}
-                  <div className="mt-8 mb-6 flex flex-wrap gap-2">
-                    {blog.tags.map((tag, index) => (
-                      <Link
-                        key={index}
-                        to={`/blog/tag/${tag}`}
-                        className="flex items-center px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors"
-                      >
-                        <TagIcon className="w-3 h-3 mr-1" />
-                        {tag}
-                      </Link>
-                    ))}
-                  </div>
-
-                  {/* Action Bar */}
-                  <div className="border-t border-white/10 pt-6 mt-6 flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
-                      <Link
-                        to={`/dashboard/fullblog/${blog.id}`}
-                        className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors"
-                      >
-                        <Eye className="h-5 w-5" />
-                        <span>Read in dashboard</span>
-                      </Link>
-
-                      <button
-                        onClick={shareBlog}
-                        className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors group"
-                      >
-                        <Share2 className="h-5 w-5 group-hover:text-blue-400" />
-                        <span>Share</span>
-                      </button>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <img
-                        src={blog.authorImgUrl}
-                        alt={blog.author.name}
-                        className="w-10 h-10 rounded-full border border-white/10"
-                      />
-                      <div>
-                        <div className="text-sm font-medium">
-                          {blog.author.name}
-                        </div>
-                        <div className="text-xs text-white/60">Author</div>
+                  <div className="flex items-center space-x-2">
+                    <img
+                      src={blog.authorImgUrl}
+                      alt={blog.author.name}
+                      className="w-10 h-10 rounded-full border border-white/10"
+                    />
+                    <div>
+                      <div className="text-sm font-medium">
+                        {blog.author.name}
                       </div>
+                      <div className="text-xs text-white/60">Author</div>
                     </div>
                   </div>
                 </div>

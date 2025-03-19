@@ -247,126 +247,110 @@ const FullBlog = () => {
             <div className="bg-[#111111] border border-white/5 rounded-xl shadow-xl overflow-hidden">
               {/* Article Content */}
               <div className="p-8">
-                <div className="prose prose-lg prose-invert max-w-none">
-                  {paragraphs.map((paragraph, index) => (
-                    <p
-                      key={index}
-                      className="text-white/90 mb-6 leading-relaxed"
-                    >
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
+                <div
+                  className="prose prose-lg prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: blog.content }}
+                />
+              </div>
 
-                {/* Tags */}
-                <div className="mt-8 mb-6 flex flex-wrap gap-2">
-                  {blog.tags.map((tag, index) => (
-                    <Link
-                      key={index}
-                      to={`/dashboard/blog/${tag}`}
-                      className="flex items-center px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors"
-                    >
-                      <TagIcon className="w-3 h-3 mr-1" />
-                      {tag}
-                    </Link>
-                  ))}
-                </div>
+              {/* Tags */}
+              <div className="mt-8 mb-6 flex flex-wrap gap-2">
+                {blog.tags.map((tag, index) => (
+                  <Link
+                    key={index}
+                    to={`/dashboard/blog/${tag}`}
+                    className="flex items-center px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors"
+                  >
+                    <TagIcon className="w-3 h-3 mr-1" />
+                    {tag}
+                  </Link>
+                ))}
+              </div>
 
-                {/* Action Bar */}
-                <div className="border-t border-white/10 pt-6 mt-6 flex justify-between items-center">
-                  <div className="flex items-center space-x-4">
-                    <fetcher.Form
-                      className="flex"
-                      method={isLiked ? "DELETE" : "POST"}
-                      action={isLiked ? "/api/removelike" : "/api/addlike"}
-                    >
-                      <input type="hidden" name="postId" value={blog.id} />
-                      <input
-                        type="hidden"
-                        name="userId"
-                        value={user?.id ?? ""}
-                      />
-                      <button
-                        type="submit"
-                        onClick={() => setIsLiked(!isLiked)}
-                        className="flex items-center space-x-1 group"
-                      >
-                        <Heart
-                          className={`h-5 w-5 ${
-                            isLiked
-                              ? "fill-current text-red-500"
-                              : "text-white/70 group-hover:text-red-500"
-                          } transition-colors duration-200`}
-                        />
-                        <span
-                          className={isLiked ? "text-red-500" : "text-white/70"}
-                        >
-                          {blog.likes.length}
-                        </span>
-                      </button>
-                    </fetcher.Form>
-
-                    <fetcher.Form
-                      className="flex"
-                      method={isBookmarked ? "DELETE" : "POST"}
-                      action={
-                        isBookmarked ? "/removebookmarks" : "/addbookmark"
-                      }
-                    >
-                      <input
-                        type="hidden"
-                        name="userId"
-                        value={user?.id ?? ""}
-                      />
-                      <button
-                        onClick={() => {
-                          setTimeout(() => {
-                            setIsBookmarked(!isBookmarked);
-                          }, 100);
-                        }}
-                        type="submit"
-                        name="postId"
-                        value={blog.id}
-                        className="flex items-center space-x-1 group"
-                      >
-                        <Bookmark
-                          className={`h-5 w-5 ${
-                            isBookmarked
-                              ? "fill-current text-blue-500"
-                              : "text-white/70 group-hover:text-blue-500"
-                          } transition-colors duration-200`}
-                        />
-                        <span
-                          className={
-                            isBookmarked ? "text-blue-500" : "text-white/70"
-                          }
-                        >
-                          Save
-                        </span>
-                      </button>
-                    </fetcher.Form>
-
+              {/* Action Bar */}
+              <div className="border-t border-white/10 pt-6 mt-6 flex justify-between items-center">
+                <div className="flex items-center space-x-4">
+                  <fetcher.Form
+                    className="flex"
+                    method={isLiked ? "DELETE" : "POST"}
+                    action={isLiked ? "/api/removelike" : "/api/addlike"}
+                  >
+                    <input type="hidden" name="postId" value={blog.id} />
+                    <input type="hidden" name="userId" value={user?.id ?? ""} />
                     <button
-                      onClick={shareBlog}
-                      className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors group"
+                      type="submit"
+                      onClick={() => setIsLiked(!isLiked)}
+                      className="flex items-center space-x-1 group"
                     >
-                      <Share2 className="h-5 w-5 group-hover:text-blue-400" />
-                      <span>Share</span>
+                      <Heart
+                        className={`h-5 w-5 ${
+                          isLiked
+                            ? "fill-current text-red-500"
+                            : "text-white/70 group-hover:text-red-500"
+                        } transition-colors duration-200`}
+                      />
+                      <span
+                        className={isLiked ? "text-red-500" : "text-white/70"}
+                      >
+                        {blog.likes.length}
+                      </span>
                     </button>
-                  </div>
+                  </fetcher.Form>
 
-                  <div className="flex items-center space-x-2">
-                    <img
-                      src={blog.authorImgUrl}
-                      alt={blog.author.name}
-                      className="w-10 h-10 rounded-full border border-white/10"
-                    />
-                    <div>
-                      <div className="text-sm font-medium">
-                        {blog.author.name}
-                      </div>
-                      <div className="text-xs text-white/60">Author</div>
+                  <fetcher.Form
+                    className="flex"
+                    method={isBookmarked ? "DELETE" : "POST"}
+                    action={isBookmarked ? "/removebookmarks" : "/addbookmark"}
+                  >
+                    <input type="hidden" name="userId" value={user?.id ?? ""} />
+                    <button
+                      onClick={() => {
+                        setTimeout(() => {
+                          setIsBookmarked(!isBookmarked);
+                        }, 100);
+                      }}
+                      type="submit"
+                      name="postId"
+                      value={blog.id}
+                      className="flex items-center space-x-1 group"
+                    >
+                      <Bookmark
+                        className={`h-5 w-5 ${
+                          isBookmarked
+                            ? "fill-current text-blue-500"
+                            : "text-white/70 group-hover:text-blue-500"
+                        } transition-colors duration-200`}
+                      />
+                      <span
+                        className={
+                          isBookmarked ? "text-blue-500" : "text-white/70"
+                        }
+                      >
+                        Save
+                      </span>
+                    </button>
+                  </fetcher.Form>
+
+                  <button
+                    onClick={shareBlog}
+                    className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors group"
+                  >
+                    <Share2 className="h-5 w-5 group-hover:text-blue-400" />
+                    <span>Share</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <img
+                    src={blog.authorImgUrl}
+                    alt={blog.author.name}
+                    className="w-10 h-10 rounded-full border border-white/10"
+                  />
+                  <div>
+                    <div className="text-sm font-medium">
+                      {blog.author.name}
                     </div>
+                    <div className="text-xs text-white/60">Author</div>
                   </div>
                 </div>
               </div>

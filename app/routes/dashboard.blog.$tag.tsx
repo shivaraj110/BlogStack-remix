@@ -5,6 +5,7 @@ import { getBookmarks } from "~/.server/bookmark";
 import { prisma } from "~/.server/db";
 import { getLikes } from "~/.server/likes";
 import BlogPost from "~/components/Blog";
+
 export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
   const tag = args.params["tag"];
@@ -58,6 +59,11 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   }
 };
 
+function stripHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+}
+
 export default function () {
   interface BlogData {
     title: string;
@@ -109,14 +115,15 @@ export default function () {
               authorImgUrl={b.authorImgUrl}
               authorName={b.author.name || "Anonymous"}
               title={b.title}
-              content={b.content}
+              content={stripHtml(b.content).substring(0, 120)}
               tags={!b.tags ? ["notags"] : b.tags}
               publishDate={b.publishDate ? b.publishDate : "no trace"}
-              likes={likedPosts}
+              likes={b.likes.length}
               comments={b.comments.length}
               likeCount={b.likes.length}
               id={Number(b.id)}
               bookmarks={bookmarkIds}
+              bookmarked={bookmarkIds.includes(Number(b.id))}
             />
           ))}
         </div>

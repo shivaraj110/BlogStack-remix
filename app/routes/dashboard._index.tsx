@@ -35,6 +35,11 @@ interface LoaderData {
   };
 }
 
+function stripHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+}
+
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
   const url = new URL(args.request.url);
@@ -235,7 +240,7 @@ export default function DashboardPage() {
                     {blog.title}
                   </h2>
                   <p className="text-gray-600 dark:text-white/60 text-sm mb-4 line-clamp-2">
-                    {blog.content}
+                    {stripHtml(blog.content).substring(0, 120)}
                   </p>
                   <div className="flex items-center justify-between text-sm text-gray-500 dark:text-white/60 mb-4">
                     <div className="flex items-center space-x-4">

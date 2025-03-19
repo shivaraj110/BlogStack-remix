@@ -1,25 +1,8 @@
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
-import { HeadingNode, QuoteNode } from "@lexical/rich-text";
-import { ListPlugin } from "@lexical/react/LexicalListPlugin";
-import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
-import { TRANSFORMERS } from "@lexical/markdown";
-import { ListItemNode, ListNode } from "@lexical/list";
-import { CodeHighlightNode, CodeNode } from "@lexical/code";
-import { AutoLinkNode, LinkNode } from "@lexical/link";
-import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-  $getRoot,
-  $getSelection,
-  $isRangeSelection,
-  FORMAT_TEXT_COMMAND,
-  TextFormatType,
-  EditorState,
-} from "lexical";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
+import Placeholder from "@tiptap/extension-placeholder";
 import {
   Bold,
   Italic,
@@ -31,102 +14,48 @@ import {
   ListOrdered,
   Quote,
   Code,
+  Link as LinkIcon,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useCallback, useEffect } from "react";
 
-// Define theme
-const theme = {
-  root: "p-0 position-relative",
-  paragraph: "mb-2 text-white",
-  heading: {
-    h1: "text-3xl font-bold mb-4 text-white",
-    h2: "text-2xl font-bold mb-3 text-white",
-    h3: "text-xl font-bold mb-2 text-white",
-  },
-  text: {
-    bold: "font-bold",
-    italic: "italic",
-    underline: "underline",
-    code: "bg-white/10 p-1 rounded font-mono text-sm",
-  },
-  list: {
-    ol: "list-decimal pl-5 mb-2 text-white",
-    ul: "list-disc pl-5 mb-2 text-white",
-    listitem: "ml-2 text-white",
-  },
-  quote: "border-l-4 border-white/30 pl-4 italic my-4 text-white/80",
-  code: "bg-white/10 p-1 rounded font-mono text-sm text-white",
-};
-
-// Custom error boundary component
-
-// Custom error boundary component
-function CustomErrorBoundary({ children }: { children: React.ReactNode }) {
-  return <div>{children}</div>;
+interface RichTextEditorProps {
+  onChange: (content: string) => void;
+  initialContent?: string;
 }
 
-// OnChange plugin to capture content
-function OnChangePlugin({ onChange }: { onChange: (content: string) => void }) {
-  const [editor] = useLexicalComposerContext();
-
-  const handleChange = useCallback(
-    (editorState: EditorState) => {
-      editorState.read(() => {
-        const root = $getRoot();
-        const content = root.getTextContent();
-        onChange(content);
-      });
-    },
-    [onChange]
-  );
-
-  useEffect(() => {
-    return editor.registerUpdateListener(({ editorState }) => {
-      handleChange(editorState);
-    });
-  }, [editor, handleChange]);
-
-  return null;
-}
-
-// Toolbar plugin
-function ToolbarPlugin() {
-  const [editor] = useLexicalComposerContext();
-
-  const formatText = (format: TextFormatType) => {
-    editor.dispatchCommand(FORMAT_TEXT_COMMAND, format);
-  };
-
-  const formatHeading = (tag: string) => {
-    editor.update(() => {
-      const selection = $getSelection();
-      if ($isRangeSelection(selection)) {
-        selection.formatText({ tag } as unknown as TextFormatType);
-      }
-    });
-  };
+const MenuBar = ({ editor }: { editor: any }) => {
+  if (!editor) {
+    return null;
+  }
 
   return (
     <div className="flex flex-wrap gap-2 p-2 bg-white/5 border border-white/10 rounded-t-xl">
       <button
-        onClick={() => formatText("bold")}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("bold") ? "bg-white/10" : ""
+        }`}
         title="Bold"
         type="button"
       >
         <Bold className="w-4 h-4 text-white" />
       </button>
       <button
-        onClick={() => formatText("italic")}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("italic") ? "bg-white/10" : ""
+        }`}
         title="Italic"
         type="button"
       >
         <Italic className="w-4 h-4 text-white" />
       </button>
       <button
-        onClick={() => formatText("underline")}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("underline") ? "bg-white/10" : ""
+        }`}
         title="Underline"
         type="button"
       >
@@ -134,24 +63,30 @@ function ToolbarPlugin() {
       </button>
       <div className="w-px h-6 bg-white/10 mx-2" />
       <button
-        onClick={() => formatHeading("h1")}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("heading", { level: 1 }) ? "bg-white/10" : ""
+        }`}
         title="Heading 1"
         type="button"
       >
         <Heading1 className="w-4 h-4 text-white" />
       </button>
       <button
-        onClick={() => formatHeading("h2")}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("heading", { level: 2 }) ? "bg-white/10" : ""
+        }`}
         title="Heading 2"
         type="button"
       >
         <Heading2 className="w-4 h-4 text-white" />
       </button>
       <button
-        onClick={() => formatHeading("h3")}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("heading", { level: 3 }) ? "bg-white/10" : ""
+        }`}
         title="Heading 3"
         type="button"
       >
@@ -159,88 +94,128 @@ function ToolbarPlugin() {
       </button>
       <div className="w-px h-6 bg-white/10 mx-2" />
       <button
-        onClick={() => formatHeading("ul")}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("bulletList") ? "bg-white/10" : ""
+        }`}
         title="Bullet List"
         type="button"
       >
         <List className="w-4 h-4 text-white" />
       </button>
       <button
-        onClick={() => formatHeading("ol")}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("orderedList") ? "bg-white/10" : ""
+        }`}
         title="Numbered List"
         type="button"
       >
         <ListOrdered className="w-4 h-4 text-white" />
       </button>
       <button
-        onClick={() => formatHeading("blockquote")}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("blockquote") ? "bg-white/10" : ""
+        }`}
         title="Quote"
         type="button"
       >
         <Quote className="w-4 h-4 text-white" />
       </button>
       <button
-        onClick={() => formatHeading("code")}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("codeBlock") ? "bg-white/10" : ""
+        }`}
         title="Code"
         type="button"
       >
         <Code className="w-4 h-4 text-white" />
       </button>
+      <button
+        onClick={() => {
+          const url = window.prompt("Enter the URL");
+          if (url) {
+            editor.chain().focus().setLink({ href: url }).run();
+          }
+        }}
+        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+          editor.isActive("link") ? "bg-white/10" : ""
+        }`}
+        title="Add Link"
+        type="button"
+      >
+        <LinkIcon className="w-4 h-4 text-white" />
+      </button>
+      <button
+        onClick={() => {
+          const url = window.prompt("Enter the image URL");
+          if (url) {
+            editor.chain().focus().setImage({ src: url }).run();
+          }
+        }}
+        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        title="Add Image"
+        type="button"
+      >
+        <ImageIcon className="w-4 h-4 text-white" />
+      </button>
     </div>
   );
-}
-
-interface RichTextEditorProps {
-  onChange: (content: string) => void;
-  initialContent?: string;
-}
+};
 
 export default function RichTextEditor({
   onChange,
   initialContent,
 }: RichTextEditorProps) {
-  const initialConfig = {
-    namespace: "BlogEditor",
-    theme,
-    onError: (error: Error) => {
-      console.error(error);
-    },
-    // Remove editorState property to avoid JSON parsing issues
-    nodes: [
-      HeadingNode,
-      QuoteNode,
-      ListItemNode,
-      ListNode,
-      CodeHighlightNode,
-      CodeNode,
-      AutoLinkNode,
-      LinkNode,
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          rel: "noopener noreferrer",
+          class: "text-blue-400 hover:text-blue-300 underline",
+        },
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: "rounded-lg max-w-full",
+        },
+      }),
+      Placeholder.configure({
+        placeholder: "Start writing your blog post...",
+      }),
     ],
-  };
+    content: initialContent,
+    editorProps: {
+      attributes: {
+        class:
+          "min-h-[200px] outline-none px-4 py-3 bg-white/5 border border-white/10 rounded-b-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 text-white placeholder:text-white/40 transition-all prose prose-invert max-w-none",
+      },
+    },
+  });
+
+  const handleChange = useCallback(() => {
+    if (editor) {
+      onChange(editor.getHTML());
+    }
+  }, [editor, onChange]);
+
+  useEffect(() => {
+    if (editor) {
+      editor.on("update", handleChange);
+      return () => {
+        editor.off("update", handleChange);
+      };
+    }
+  }, [editor, handleChange]);
 
   return (
-    <LexicalComposer initialConfig={initialConfig}>
-      <div className="editor-container relative">
-        <ToolbarPlugin />
-        <div className="editor-inner">
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable className="min-h-[200px] outline-none px-4 py-3 bg-white/5 border border-white/10 rounded-b-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 text-white placeholder:text-white/40 transition-all" />
-            }
-            ErrorBoundary={CustomErrorBoundary}
-          />
-          <OnChangePlugin onChange={onChange} />
-          <HistoryPlugin />
-          <AutoFocusPlugin />
-          <ListPlugin />
-          <LinkPlugin />
-          <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
-        </div>
-      </div>
-    </LexicalComposer>
+    <div className="editor-container relative">
+      <MenuBar editor={editor} />
+      <EditorContent editor={editor} />
+    </div>
   );
 }

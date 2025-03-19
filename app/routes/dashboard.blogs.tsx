@@ -96,6 +96,11 @@ export const loader = async (args: LoaderFunctionArgs) => {
   }
 };
 
+function stripHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+}
+
 export default function BlogsPage() {
   const { body } = useLoaderData<typeof loader>();
   const { blogs, pagination } = body;
@@ -141,9 +146,10 @@ export default function BlogsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {blogs.map((blog) => (
           <BlogCard
+            key={blog.id}
             id={blog.id}
             title={blog.title}
-            content={blog.content}
+            content={stripHtml(blog.content).substring(0, 120)}
             likes={blog._count.likes}
             comments={blog._count.comments}
             likeCount={23}
@@ -154,6 +160,7 @@ export default function BlogsPage() {
             publishDate={blog.publishDate}
             imgUrl={blog.imgUrl}
             bookmarked={true}
+            bookmarks={[]}
           />
         ))}
       </div>
@@ -163,10 +170,11 @@ export default function BlogsPage() {
         <div className="flex justify-center items-center space-x-2 mt-8">
           <Link
             to={`?page=${pagination.currentPage - 1}`}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasPrevPage
-              ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
-              : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
-              }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              pagination.hasPrevPage
+                ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
+                : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
+            }`}
             onClick={(e) => !pagination.hasPrevPage && e.preventDefault()}
           >
             Previous
@@ -176,10 +184,11 @@ export default function BlogsPage() {
           </span>
           <Link
             to={`?page=${pagination.currentPage + 1}`}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasNextPage
-              ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
-              : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
-              }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              pagination.hasNextPage
+                ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
+                : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
+            }`}
             onClick={(e) => !pagination.hasNextPage && e.preventDefault()}
           >
             Next
