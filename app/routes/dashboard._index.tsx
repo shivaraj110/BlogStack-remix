@@ -220,7 +220,7 @@ export default function DashboardPage() {
 							tags={blog.tags}
 							publishDate={blog.publishDate}
 							imgUrl={blog.imgUrl}
-							bookmarks={[]}
+							bookmarked={true}
 						/>
 					))}
 				</div>

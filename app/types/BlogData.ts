@@ -12,4 +12,5 @@ export interface BlogData {
 	imgUrl: string;
 	authorImgUrl: string;
 	bookmarks: number[];
+	bookmarked: boolean;
 }

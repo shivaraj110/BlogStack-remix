@@ -153,7 +153,7 @@ export default function BlogsPage() {
             tags={blog.tags}
             publishDate={blog.publishDate}
             imgUrl={blog.imgUrl}
-            bookmarks={[]}
+            bookmarked={true}
           />
         ))}
       </div>
