@@ -112,7 +112,6 @@ const MyBlogs = () => {
             authorId={b.authorId}
             id={Number(b.id)}
             bookmarked={true}
-            bookmarks={[]}
           />
         ))}
       </div>

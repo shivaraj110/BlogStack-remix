@@ -314,16 +314,14 @@ const FullBlog = () => {
                       className="flex items-center space-x-1 group"
                     >
                       <Heart
-                        className={`h-4 h-4 sm:h-5 sm:w-5 ${
-                          isLiked
+                        className={`h-4 h-4 sm:h-5 sm:w-5 ${isLiked
                             ? "fill-current text-red-500"
                             : "text-white/70 group-hover:text-red-500"
-                        } transition-colors duration-200`}
+                          } transition-colors duration-200`}
                       />
                       <span
-                        className={`text-xs sm:text-sm ${
-                          isLiked ? "text-red-500" : "text-white/70"
-                        }`}
+                        className={`text-xs sm:text-sm ${isLiked ? "text-red-500" : "text-white/70"
+                          }`}
                       >
                         {blog.likes.length}
                       </span>
@@ -348,16 +346,14 @@ const FullBlog = () => {
                       className="flex items-center space-x-1 group"
                     >
                       <Bookmark
-                        className={`h-4 h-4 sm:h-5 sm:w-5 ${
-                          isBookmarked
+                        className={`h-4 h-4 sm:h-5 sm:w-5 ${isBookmarked
                             ? "fill-current text-blue-500"
                             : "text-white/70 group-hover:text-blue-500"
-                        } transition-colors duration-200`}
+                          } transition-colors duration-200`}
                       />
                       <span
-                        className={`text-xs sm:text-sm ${
-                          isBookmarked ? "text-blue-500" : "text-white/70"
-                        }`}
+                        className={`text-xs sm:text-sm ${isBookmarked ? "text-blue-500" : "text-white/70"
+                          }`}
                       >
                         Save
                       </span>
@@ -416,6 +412,11 @@ const FullBlog = () => {
                           type="text"
                           value={comment}
                           onChange={(e) => setComment(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+
+                            }
+                          }}
                           placeholder="Add a comment..."
                           className="w-full p-2 sm:p-3 pr-10 sm:pr-12 bg-[#0a0a0a] border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-white/40 text-white text-sm"
                         />
@@ -432,11 +433,10 @@ const FullBlog = () => {
                             onClick={() =>
                               setTimeout(() => setComment(""), 100)
                             }
-                            className={`p-1 rounded-full ${
-                              comment
+                            className={`p-1 rounded-full ${comment
                                 ? "text-blue-500 hover:bg-white/5"
                                 : "text-white/30"
-                            } transition-colors`}
+                              } transition-colors`}
                           >
                             <SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
