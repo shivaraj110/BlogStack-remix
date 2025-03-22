@@ -11,14 +11,10 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
 	const { userId } = await getAuth(args);
 	try {
 		const blogs = await getBookmarks(userId ?? "");
-		const likes = await getLikes(userId ?? "");
-		let likedPosts: number[] = [];
-		likes?.map((l) => [likedPosts.push(l.postId)]);
 		return {
 			status: "success",
 			body: {
 				blogs,
-				likedPosts,
 			},
 		};
 	} catch (e) {
@@ -32,7 +28,6 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
 export default function() {
 	const { body } = useLoaderData<typeof loader>();
 	const blogs: BookmarkedBlogData[] = body.blogs;
-	const likedPosts: number[] = body.likedPosts;
 
 	if (!body.blogs[0]) {
 		return (
