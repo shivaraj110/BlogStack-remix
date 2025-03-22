@@ -61,7 +61,7 @@ export default function() {
 					content={b.post.content}
 					tags={!b.post.tags ? ["notags"] : b.post.tags}
 					publishDate={b.post.publishDate ? b.post.publishDate : "no trace"}
-					likes={likedPosts.length}
+					likes={b.post.likes.length}
 					id={Number(b.post.id)}
 					bookmarked={true}
 				/>
