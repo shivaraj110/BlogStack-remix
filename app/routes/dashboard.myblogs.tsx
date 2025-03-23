@@ -1,11 +1,9 @@
 import { getAuth } from "@clerk/remix/ssr.server";
 import { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
-import { getBookmarks } from "~/.server/bookmark";
+import { Link, useFetcher, useLoaderData } from "@remix-run/react";
+import { Trash } from "lucide-react";
 import { prisma } from "~/.server/db";
-import { getLikes } from "~/.server/likes";
 import BlogCard from "~/components/Blog";
-import MyBlogPost from "~/components/MyBlog";
 
 export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
 	const { userId } = await getAuth(args);
@@ -80,28 +78,50 @@ const MyBlogs = () => {
 		};
 		id: number;
 	}
-
+	const fetcher = useFetcher()
 	return (
 		<div className="mt-10">
 			<h2 className="text-2xl font-bold">{"Your posts till now"}</h2>
 			<div className="grid grid-cols-1 mt-10 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{blogs.map((b: BlogData) => (
-					<BlogCard
-						key={b.id}
-						imgUrl={b.imgUrl}
-						authorImgUrl={b.authorImgUrl}
-						authorName={b.author.name || "Anonymous"}
-						title={b.title}
-						content={stripHtml(b.content).substring(0, 120)}
-						tags={!b.tags ? ["notags"] : b.tags}
-						publishDate={b.publishDate ? b.publishDate : "no trace"}
-						likes={b.likes.length}
-						likeCount={b.likes.length}
-						comments={b.comments.length}
-						authorId={b.authorId}
-						id={Number(b.id)}
-						bookmarked={true}
-					/>
+					<div className="flex-col justify-center items-center">
+						<BlogCard
+							key={b.id}
+							imgUrl={b.imgUrl}
+							authorImgUrl={b.authorImgUrl}
+							authorName={b.author.name || "Anonymous"}
+							title={b.title}
+							content={stripHtml(b.content).substring(0, 120)}
+							tags={!b.tags ? ["notags"] : b.tags}
+							publishDate={b.publishDate ? b.publishDate : "no trace"}
+							likes={b.likes.length}
+							likeCount={b.likes.length}
+							comments={b.comments.length}
+							authorId={b.authorId}
+							id={Number(b.id)}
+							bookmarked={true}
+						/>
+						<fetcher.Form
+							action="/deleteBlog"
+							method="DELETE">
+							<div
+								className="flex justify-center items-center"
+							>
+								<input type="hidden" name="id" value={b.id} />
+								<button type="submit">
+									<div
+										className="cursor-pointer items-center flex justify-center bg-gradient-to-b from-[#111111] to-[#0c0c0c] rounded-xl overflow-hidden shadow-md border border-white/5  w-[500px] h-[50px] text-red-200 hover:text-red-400"
+									>
+										<div
+											className=""
+										>delete
+										</div>
+									</div>
+								</button>
+							</div>
+						</fetcher.Form>
+					</div>
+
 				))}
 			</div>
 		</div>
