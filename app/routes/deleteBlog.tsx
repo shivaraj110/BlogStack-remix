@@ -1,5 +1,4 @@
-import { getAuth } from "@clerk/remix/ssr.server";
-import { ActionFunction } from "@remix-run/node";
+import { ActionFunction, redirect } from "@remix-run/node";
 import { prisma } from "~/.server/db";
 
 
@@ -13,9 +12,8 @@ export const action: ActionFunction = async (args) => {
 			}
 		})
 		if (deletedBlog) {
-			return {
-				status: "success"
-			}
+			return redirect("/dashboard")
+
 		}
 		return {
 			status: "failed"
