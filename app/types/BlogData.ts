@@ -12,4 +12,5 @@ export interface BlogData {
 	imgUrl: string;
 	authorImgUrl: string;
 	bookmarked: boolean;
+	deleteable?: boolean;
 }

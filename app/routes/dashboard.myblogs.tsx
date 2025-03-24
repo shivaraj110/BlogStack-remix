@@ -1,7 +1,6 @@
 import { getAuth } from "@clerk/remix/ssr.server";
 import { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { Link, useFetcher, useLoaderData } from "@remix-run/react";
-import { Trash } from "lucide-react";
+import { Link, useLoaderData } from "@remix-run/react";
 import { prisma } from "~/.server/db";
 import BlogCard from "~/components/Blog";
 
@@ -78,14 +77,15 @@ const MyBlogs = () => {
 		};
 		id: number;
 	}
-	const fetcher = useFetcher()
+
 	return (
 		<div className="mt-10">
 			<h2 className="text-2xl font-bold">{"Your posts till now"}</h2>
 			<div className="grid grid-cols-1 mt-10 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{blogs.map((b: BlogData) => (
-					<div className="flex-col justify-center items-center">
+					<div>
 						<BlogCard
+							deleteable={true}
 							key={b.id}
 							imgUrl={b.imgUrl}
 							authorImgUrl={b.authorImgUrl}
@@ -101,25 +101,11 @@ const MyBlogs = () => {
 							id={Number(b.id)}
 							bookmarked={true}
 						/>
-						<fetcher.Form
-							action="/deleteBlog"
-							method="DELETE">
-							<div
-								className="flex justify-center items-center"
-							>
-								<input type="hidden" name="id" value={b.id} />
-								<button type="submit">
-									<div
-										className="cursor-pointer items-center flex justify-center bg-gradient-to-b from-[#111111] to-[#0c0c0c] rounded-xl overflow-hidden shadow-md border border-white/5  w-[500px] h-[50px] text-red-200 hover:text-red-400"
-									>
-										<div
-											className=""
-										>delete
-										</div>
-									</div>
-								</button>
-							</div>
-						</fetcher.Form>
+						<div
+							className="bg-gradient-to-b from-[#111111] to-[#0c0c0c] rounded-xl overflow-hidden shadow-md border border-white/5 animate-pulse hidden hover:flex w-[100px] h-[50px]"
+						>
+
+						</div>
 					</div>
 
 				))}
