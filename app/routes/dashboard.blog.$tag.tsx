@@ -98,7 +98,7 @@ export default function() {
 
 	return (
 		<div className="flex flex-col">
-			<div className="mt- flex gap-2 ">
+			<div className="mt- flex gap-2 text-2xl font-bold">
 				{"Showing results for"}{" "}
 				<div className="flex gap-1 items-center">
 
