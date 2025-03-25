@@ -6,6 +6,7 @@ node_modules
 #secrets
 .env
 ./lib/url
+app/routes/privacy.tsx
 
 #util scripts
 dev.sh
