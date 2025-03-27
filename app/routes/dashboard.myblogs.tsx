@@ -79,11 +79,11 @@ const MyBlogs = () => {
 	}
 
 	return (
-		<div className="mt-10">
+		<div className="mt-10 ">
 			<h2 className="text-2xl font-bold">{"Your posts till now"}</h2>
 			<div className="grid grid-cols-1 mt-10 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{blogs.map((b: BlogData) => (
-					<div>
+					<div className="flex">
 						<BlogCard
 							deleteable={true}
 							key={b.id}

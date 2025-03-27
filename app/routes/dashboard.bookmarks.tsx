@@ -2,9 +2,7 @@ import { getAuth } from "@clerk/remix/ssr.server";
 import { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 import { getBookmarks } from "~/.server/bookmark";
-import { getLikes } from "~/.server/likes";
 import BlogCard from "~/components/Blog";
-import BookmarkedBlogPost from "~/components/BookMarkBlogs";
 import { BookmarkedBlogData } from "~/types/BookMarkedBlogs";
 
 export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
@@ -25,7 +23,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   }
 };
 
-export default function () {
+export default function() {
   const { body } = useLoaderData<typeof loader>();
   const blogs: BookmarkedBlogData[] = body.blogs;
 
