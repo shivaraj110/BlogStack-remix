@@ -1,5 +1,5 @@
 import { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { Link, useLoaderData, useNavigate } from "@remix-run/react";
+import { Link, useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
 import {
   ArrowLeft,
   Calendar,
@@ -10,11 +10,13 @@ import {
   User as UserIcon,
   Eye,
   Image as ImageIcon,
+  SendHorizontal,
 } from "lucide-react";
 import { prisma } from "~/.server/db";
 import { useState, useEffect } from "react";
 import PublicNavbar from "~/components/PublicNavbar";
 import PublicFooter from "~/components/PublicFooter";
+import { useUser } from "@clerk/remix";
 
 export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   const id = Number(args.params["id"]);
@@ -107,6 +109,10 @@ const PublicBlog = () => {
   const { body } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
+  const [comment, setComment] = useState<string>("");
+  const { user, isLoaded } = useUser();
+  const fetcher = useFetcher();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const blog: {
     id: number;
@@ -164,13 +170,23 @@ const PublicBlog = () => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
+  // Handle comment submission with loading state
+  const handleCommentSubmit = () => {
+    if (!comment.trim()) return;
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setComment("");
+      setIsSubmitting(false);
+    }, 500);
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
       <PublicNavbar />
 
       <div className="flex-grow pb-10 md:pb-20">
         {/* Hero Section with Blog Image */}
-        <div className="w-full h-[30vh] sm:h-[40vh] md:h-[50vh] relative">
+        <div className="w-full h-[30vh] sm:h-[40vh] md:h-[50vh] relative max-w-7xl mx-auto">
           {blog.imgUrl && !imageError ? (
             <img
               src={blog.imgUrl}
@@ -231,7 +247,7 @@ const PublicBlog = () => {
         </div>
 
         <div className="px-2">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 max-w-7xl mx-auto">
             {/* Main Content */}
             <div className="lg:col-span-2">
               <div className="sm:p-8">
@@ -303,23 +319,113 @@ const PublicBlog = () => {
                     Comments ({blog.comments.length})
                   </h3>
 
-                  {/* Comment Login Prompt */}
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-                    <p className="text-white/80 text-sm sm:text-base mb-2">
-                      Join the conversation and share your thoughts on this
-                      post.
-                    </p>
-                    <Link
-                      to={`/dashboard/fullblog/${blog.id}`}
-                      className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                    >
-                      Sign in to comment
-                    </Link>
-                  </div>
+                  {!isLoaded ? (
+                    // Loading state for user authentication
+                    <div className="mb-6">
+                      <div className="flex items-start sm:items-center gap-3 mb-4">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 animate-pulse"></div>
+                        <div className="flex-1">
+                          <div className="w-full h-10 sm:h-12 bg-white/10 rounded-lg animate-pulse"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : isLoaded && user ? (
+                    // Comment form for logged-in users
+                    <div className="mb-6">
+                      <div className="flex items-start sm:items-center gap-3 mb-4">
+                        <img
+                          src={
+                            user?.imageUrl || "https://via.placeholder.com/40"
+                          }
+                          alt="Your profile"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-white/10"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "https://via.placeholder.com/40";
+                          }}
+                        />
+                        <div className="flex-1">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={comment}
+                              onChange={(e) => setComment(e.target.value)}
+                              placeholder="Add a comment..."
+                              className="w-full p-2 sm:p-3 pr-10 sm:pr-12 bg-[#0a0a0a] border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-white/40 text-white text-sm"
+                              disabled={isSubmitting}
+                            />
+                            <fetcher.Form
+                              method="POST"
+                              action={comment !== "" ? "/api/pushcomment" : ""}
+                              className="absolute right-2 top-1/2 -translate-y-1/2"
+                            >
+                              <input
+                                type="hidden"
+                                name="postId"
+                                value={blog.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="comment"
+                                value={comment}
+                              />
+                              <button
+                                type="submit"
+                                disabled={!comment || isSubmitting}
+                                onClick={handleCommentSubmit}
+                                className={`p-1 rounded-full ${
+                                  comment && !isSubmitting
+                                    ? "text-blue-500 hover:bg-white/5"
+                                    : "text-white/30"
+                                } transition-colors ${
+                                  isSubmitting ? "animate-pulse" : ""
+                                }`}
+                              >
+                                <SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
+                              </button>
+                            </fetcher.Form>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    // Login prompt for non-logged in users
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                      <p className="text-white/80 text-sm sm:text-base mb-2">
+                        Join the conversation and share your thoughts on this
+                        post.
+                      </p>
+                      <Link
+                        to={`/dashboard/fullblog/${blog.id}`}
+                        className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                      >
+                        Sign in to comment
+                      </Link>
+                    </div>
+                  )}
 
                   {/* Comments List Preview */}
                   <div className="space-y-4 sm:space-y-6 max-h-[300px] sm:max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                    {blog.comments.length === 0 ? (
+                    {fetcher.state === "submitting" ||
+                    fetcher.state === "loading" ? (
+                      // Loading state for new comments being submitted
+                      <div className="animate-pulse space-y-4">
+                        {[...Array(3)].map((_, index) => (
+                          <div
+                            key={index}
+                            className="border-b border-white/5 pb-4 sm:pb-6"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10"></div>
+                              <div className="flex-1">
+                                <div className="w-24 h-4 bg-white/10 rounded mb-2"></div>
+                                <div className="w-full h-10 bg-white/10 rounded"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : blog.comments.length === 0 ? (
                       <div className="text-center p-6 sm:p-8 text-white/50">
                         <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 opacity-30" />
                         <p className="text-sm sm:text-base">
@@ -369,7 +475,7 @@ const PublicBlog = () => {
                       ))
                     )}
 
-                    {blog.comments.length > 3 && (
+                    {!fetcher.state && blog.comments.length > 3 && (
                       <div className="text-center pt-2">
                         <Link
                           to={`/dashboard/fullblog/${blog.id}`}

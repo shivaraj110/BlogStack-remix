@@ -50,7 +50,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
   const url = new URL(args.request.url);
   const page = parseInt(url.searchParams.get("page") || "1");
-  const limit = 6;
+  const limit = 8;
   const skip = (page - 1) * limit;
 
   try {
@@ -216,7 +216,7 @@ export default function DashboardPage() {
             View all <span className="ml-1">→</span>
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {blogs.map((blog) => (
             <BlogCard
               key={blog.id}
@@ -233,7 +233,6 @@ export default function DashboardPage() {
               publishDate={blog.publishDate}
               imgUrl={blog.imgUrl}
               bookmarked={false}
-              bookmarks={[]}
             />
           ))}
         </div>
