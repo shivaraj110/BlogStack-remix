@@ -5,26 +5,71 @@
  */
 
 import { PassThrough } from "node:stream";
-
 import type { AppLoadContext, EntryContext } from "@remix-run/node";
 import { createReadableStreamFromReadable } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
-import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
+import { initSocketServer } from "./socket-server";
+import { createServer } from "node:http";
 
 const ABORT_DELAY = 5_000;
+const SOCKET_PORT = 8081;
+const FALLBACK_PORTS = [8082, 8083, 8084, 8085]; // Fallback ports to try if main port is busy
+
+// Initialize Socket.IO server only in development mode
+export let io: ReturnType<typeof initSocketServer> | null = null;
+// Export the socket port for client-side code to access
+export let activeSocketPort = SOCKET_PORT;
+
+// Start WebSocket server in development mode only
+if (process.env.NODE_ENV === "development") {
+  try {
+    const httpServer = createServer();
+    io = initSocketServer(httpServer);
+
+    // Use port 8081 for the WebSocket server
+    const startServer = (port: number, fallbacks: number[] = []) => {
+      httpServer
+        .listen(port, () => {
+          console.log(`📱 WebSocket server running on port ${port}`);
+          activeSocketPort = port;
+
+          // Write the port to a file that will be loaded by the client
+          if (typeof window !== "undefined") {
+            localStorage.setItem("socketPort", String(port));
+          }
+        })
+        .on("error", (err: any) => {
+          if (err.code === "EADDRINUSE" && fallbacks.length > 0) {
+            console.log(`⚠️ Port ${port} is busy, trying ${fallbacks[0]}...`);
+            startServer(fallbacks[0], fallbacks.slice(1));
+          } else {
+            console.error("Failed to start WebSocket server:", err);
+          }
+        });
+    };
+
+    startServer(SOCKET_PORT, FALLBACK_PORTS);
+  } catch (err) {
+    console.error("Failed to start WebSocket server:", err);
+  }
+}
 
 export default function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
-  // This is ignored so we can keep it in the template for visibility.  Feel
-  // free to delete this parameter in your app if you're not using it!
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   loadContext: AppLoadContext
 ) {
-  return isbot(request.headers.get("user-agent") || "")
+  // Check if the user agent might be a bot
+  const userAgent = request.headers.get("user-agent") || "";
+  const isBotLike =
+    /bot|crawler|spider|googlebot|chrome-lighthouse|baidu|bing|google|yahoo|lighthouse/i.test(
+      userAgent
+    );
+
+  return isBotLike
     ? handleBotRequest(
         request,
         responseStatusCode,
@@ -75,9 +120,6 @@ function handleBotRequest(
         },
         onError(error: unknown) {
           responseStatusCode = 500;
-          // Log streaming rendering errors from inside the shell.  Don't log
-          // errors encountered during initial shell rendering since they'll
-          // reject and get logged in handleDocumentRequest.
           if (shellRendered) {
             console.error(error);
           }
@@ -125,9 +167,6 @@ function handleBrowserRequest(
         },
         onError(error: unknown) {
           responseStatusCode = 500;
-          // Log streaming rendering errors from inside the shell.  Don't log
-          // errors encountered during initial shell rendering since they'll
-          // reject and get logged in handleDocumentRequest.
           if (shellRendered) {
             console.error(error);
           }

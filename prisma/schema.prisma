@@ -15,23 +15,30 @@ datasource db {
 }
 
 model User {
-  id           Int          @id @default(autoincrement())
-  identifier   String       @unique
-  email        String
-  name         String?
-  password     String?
-  posts        Post[]
-  bookmarks    Bookmark[]
-  pfpUrl       String?
-  fname        String?
-  lname        String?
-  Comment      Comment[]
-  Replies      Replies[]
-  Connections  Connection[]
-  openToCollab Boolean      @default(true)
-  joinedOn     DateTime     @default(now())
-  likes        Like[]
-  views        View[]
+  id                     Int             @id @default(autoincrement())
+  identifier             String          @unique
+  email                  String
+  name                   String?
+  password               String?
+  posts                  Post[]
+  bookmarks              Bookmark[]
+  pfpUrl                 String?
+  fname                  String?
+  lname                  String?
+  Comment                Comment[]
+  Replies                Replies[]
+  Connections            Connection[]
+  openToCollab           Boolean         @default(true)
+  joinedOn               DateTime        @default(now())
+  likes                  Like[]
+  views                  View[]
+  sentMessages           Message[]       @relation("SentMessages")
+  receivedMessages       Message[]       @relation("ReceivedMessages")
+  conversations          Conversation[]  @relation("UserConversations")
+  sentFriendRequests     FriendRequest[] @relation("SentFriendRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedFriendRequests")
+  friendshipsInitiated   Friendship[]    @relation("FriendshipUser1")
+  friendshipsReceived    Friendship[]    @relation("FriendshipUser2")
 }
 
 model Connection {
@@ -102,4 +109,51 @@ model Replies {
   userId    Int
   Comment   Comment? @relation(fields: [commentId], references: [id])
   commentId Int?
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  content        String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [identifier])
+  senderId       String
+  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [identifier])
+  receiverId     String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId Int
+  read           Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+}
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  users     User[]    @relation("UserConversations")
+  messages  Message[]
+  updatedAt DateTime  @default(now())
+  createdAt DateTime  @default(now())
+}
+
+model FriendRequest {
+  id         Int      @id @default(autoincrement())
+  sender     User     @relation("SentFriendRequests", fields: [senderId], references: [identifier])
+  senderId   String
+  receiver   User     @relation("ReceivedFriendRequests", fields: [receiverId], references: [identifier])
+  receiverId String
+  status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
+}
+
+model Friendship {
+  id        Int      @id @default(autoincrement())
+  user1     User     @relation("FriendshipUser1", fields: [userId], references: [identifier])
+  userId    String
+  user2     User     @relation("FriendshipUser2", fields: [friendId], references: [identifier])
+  friendId  String
+  status    String   @default("ACCEPTED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, friendId])
 }

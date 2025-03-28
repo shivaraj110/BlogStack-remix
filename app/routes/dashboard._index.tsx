@@ -218,29 +218,91 @@ export default function DashboardPage() {
             View all <span className="ml-1">→</span>
           </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-          {blogs.map((blog) => (
-            <BlogCard
-              key={blog.id}
-              id={blog.id}
-              title={blog.title}
-              content={blog.content}
-              likes={blog._count.likes}
-              comments={blog._count.comments}
-              likeCount={blog._count.likes}
-              authorName={blog.author.name || "Anonymous"}
-              authorImgUrl={blog.author.pfpUrl || ""}
-              authorId={0}
-              tags={blog.tags}
-              publishDate={blog.publishDate}
-              imgUrl={blog.imgUrl}
-              bookmarked={false}
-            />
-          ))}
-        </div>
+
+        {blogs.length === 0 ? (
+          <div className="bg-gradient-to-br from-[#111111] to-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden shadow-lg">
+            <div className="px-6 py-12 md:py-16 flex flex-col items-center text-center">
+              <div className="w-32 h-32 md:w-40 md:h-40 mb-6 md:mb-8 relative">
+                <div
+                  className="absolute inset-0 bg-blue-500/20 rounded-full animate-pulse"
+                  style={{ animationDuration: "3s" }}
+                ></div>
+                <div
+                  className="absolute inset-4 bg-blue-500/30 rounded-full animate-pulse"
+                  style={{ animationDuration: "4s", animationDelay: "0.3s" }}
+                ></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="64"
+                    height="64"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-blue-400"
+                  >
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <path d="M8 13h2"></path>
+                    <path d="M8 17h2"></path>
+                    <path d="M14 13h2"></path>
+                    <path d="M14 17h2"></path>
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-3">
+                No blogs to show yet
+              </h3>
+              <p className="text-white/70 max-w-md mb-8 text-sm md:text-base">
+                It seems like there are no published blogs at the moment. Be the
+                first to share your thoughts and insights with the community!
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  to="/dashboard/blog/solo"
+                  className="inline-flex items-center justify-center space-x-2 bg-blue-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-600 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Write your first blog</span>
+                </Link>
+                <Link
+                  to="/blog"
+                  className="inline-flex items-center justify-center space-x-2 bg-white/5 text-white border border-white/10 px-6 py-3 rounded-xl font-medium hover:bg-white/10 transition-colors"
+                >
+                  <span>Explore public blogs</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            {blogs.map((blog) => (
+              <BlogCard
+                key={blog.id}
+                id={blog.id}
+                title={blog.title}
+                content={blog.content}
+                likes={blog._count.likes}
+                comments={blog._count.comments}
+                likeCount={blog._count.likes}
+                views={blog._count.views}
+                authorName={blog.author.name || "Anonymous"}
+                authorImgUrl={blog.author.pfpUrl || ""}
+                authorId={0}
+                tags={blog.tags}
+                publishDate={blog.publishDate}
+                imgUrl={blog.imgUrl}
+                bookmarked={false}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Pagination */}
-        {pagination.totalPages > 1 && (
+        {blogs.length > 0 && pagination.totalPages > 1 && (
           <div className="flex justify-center items-center space-x-2 mt-6 md:mt-8">
             <Link
               to={`?page=${pagination.currentPage - 1}`}

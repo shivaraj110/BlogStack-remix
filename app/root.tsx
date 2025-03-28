@@ -15,7 +15,7 @@ import { rootAuthLoader } from "@clerk/remix/ssr.server";
 // Import ClerkApp
 import { ClerkApp } from "@clerk/remix";
 import { clerkEnv } from "./env.server";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 export const meta: MetaFunction = () => [
   {
@@ -25,7 +25,7 @@ export const meta: MetaFunction = () => [
   },
 ];
 
-export const loader: LoaderFunction = (args: LoaderFunctionArgs) => {
+export const loader = (args: LoaderFunctionArgs) => {
   return rootAuthLoader(args, clerkEnv);
 };
 

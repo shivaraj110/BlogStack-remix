@@ -16,6 +16,30 @@ export default withUt({
           "Noto Color Emoji",
         ],
       },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        pulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
+        typing: {
+          "0%, 60%, 100%": { transform: "translateY(0)", opacity: "0.6" },
+          "30%": { transform: "translateY(-4px)", opacity: "1" },
+        },
+        bounce: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
+        },
+      },
+      animation: {
+        fadeIn: "fadeIn 0.3s ease-out forwards",
+        pulse: "pulse 2s ease-in-out infinite",
+        typing: "typing 1.3s infinite ease-in-out",
+        bounce: "bounce 0.5s ease-in-out",
+      },
       typography: {
         DEFAULT: {
           css: {
