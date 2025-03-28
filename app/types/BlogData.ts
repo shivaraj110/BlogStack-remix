@@ -5,6 +5,7 @@ export interface BlogData {
 	content: string;
 	publishDate: string;
 	comments: number;
+	views: number;
 	tags: string[];
 	likes: number;
 	id: number;
@@ -12,4 +13,5 @@ export interface BlogData {
 	imgUrl: string;
 	authorImgUrl: string;
 	bookmarked: boolean;
+	deleteable?: boolean;
 }

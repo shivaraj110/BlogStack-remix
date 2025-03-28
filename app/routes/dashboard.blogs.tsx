@@ -15,6 +15,7 @@ interface PostWithAuthor extends Post {
   _count: {
     likes: number;
     comments: number;
+    views: number;
   };
 }
 
@@ -33,7 +34,6 @@ interface LoaderData {
 }
 
 export const loader = async (args: LoaderFunctionArgs) => {
-  const { userId } = await getAuth(args);
   const url = new URL(args.request.url);
   const page = parseInt(url.searchParams.get("page") || "1");
   const searchQuery = url.searchParams.get("search");
@@ -86,6 +86,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
             select: {
               likes: true,
               comments: true,
+              views: true,
             },
           },
         },
@@ -214,6 +215,7 @@ export default function BlogsPage() {
           blogs.map((blog) => (
             <BlogCard
               key={blog.id}
+              views={blog._count.views}
               id={blog.id}
               title={blog.title}
               content={stripHtml(blog.content).substring(0, 120)}
@@ -244,14 +246,12 @@ export default function BlogsPage() {
       {pagination.totalPages > 1 && (
         <div className="flex justify-center items-center space-x-2 mt-8">
           <Link
-            to={`?page=${pagination.currentPage - 1}${
-              searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ""
-            }`}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              pagination.hasPrevPage
+            to={`?page=${pagination.currentPage - 1}${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ""
+              }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasPrevPage
                 ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
                 : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
-            }`}
+              }`}
             onClick={(e) => !pagination.hasPrevPage && e.preventDefault()}
           >
             Previous
@@ -260,14 +260,12 @@ export default function BlogsPage() {
             Page {pagination.currentPage} of {pagination.totalPages}
           </span>
           <Link
-            to={`?page=${pagination.currentPage + 1}${
-              searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ""
-            }`}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              pagination.hasNextPage
+            to={`?page=${pagination.currentPage + 1}${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ""
+              }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasNextPage
                 ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
                 : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
-            }`}
+              }`}
             onClick={(e) => !pagination.hasNextPage && e.preventDefault()}
           >
             Next

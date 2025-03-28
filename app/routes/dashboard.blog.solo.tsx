@@ -150,11 +150,10 @@ const Solo = () => {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Building a Modern Web Application with Remix and Prisma"
-                    className={`w-full pl-10 pr-4 py-3 bg-white/5 border ${
-                      actionData?.errors?.title
-                        ? "border-red-500/50"
-                        : "border-white/10"
-                    } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 text-white placeholder:text-white/40 transition-all`}
+                    className={`w-full pl-10 pr-4 py-3 bg-white/5 border ${actionData?.errors?.title
+                      ? "border-red-500/50"
+                      : "border-white/10"
+                      } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 text-white placeholder:text-white/40 transition-all`}
                   />
                 </div>
                 {actionData?.errors?.title && (
@@ -169,11 +168,10 @@ const Solo = () => {
                   Content
                 </label>
                 <div
-                  className={`${
-                    actionData?.errors?.content
-                      ? "border border-red-500/50 rounded-xl"
-                      : ""
-                  }`}
+                  className={`${actionData?.errors?.content
+                    ? "border border-red-500/50 rounded-xl"
+                    : ""
+                    }`}
                 >
                   <RichTextEditor
                     onChange={handleContentChange}
@@ -200,11 +198,10 @@ const Solo = () => {
                     value={tags}
                     onChange={(e) => setTags(e.target.value)}
                     placeholder="Web Development, Remix, Prisma, TypeScript, Full Stack, Tutorial"
-                    className={`w-full pl-10 pr-4 py-3 bg-white/5 border ${
-                      actionData?.errors?.tags
-                        ? "border-red-500/50"
-                        : "border-white/10"
-                    } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 text-white placeholder:text-white/40 transition-all`}
+                    className={`w-full pl-10 pr-4 py-3 bg-white/5 border ${actionData?.errors?.tags
+                      ? "border-red-500/50"
+                      : "border-white/10"
+                      } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 text-white placeholder:text-white/40 transition-all`}
                   />
                 </div>
                 <p className="text-sm text-white/40 mt-1">

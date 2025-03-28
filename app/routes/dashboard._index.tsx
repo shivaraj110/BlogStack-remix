@@ -16,6 +16,7 @@ interface PostWithAuthor extends Post {
   _count: {
     likes: number;
     comments: number;
+    views: number;
   };
 }
 
@@ -79,6 +80,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
             select: {
               likes: true,
               comments: true,
+              views: true,
             },
           },
         },

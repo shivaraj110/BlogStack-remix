@@ -1,97 +1,91 @@
 import { prisma } from "./db";
 
-export const pushBookmark = async(postId : number,userId:string) => {
-    try{
-       const bookmark =  await prisma.bookmark.create({
-            data : {
+export const pushBookmark = async (postId: number, userId: string) => {
+    try {
+        const bookmark = await prisma.bookmark.create({
+            data: {
                 userId,
-                postId
-            }
-        })
-        if(bookmark){
-            return true
-        } 
-        return false
-    }
-    catch(e){
-        console.error(e);
-        return null
-    }
-}
-
-
-export const deleteBookmark = async(postId:number,userId:string
-) => {
-  const id = await getBookmarkId(userId,postId)
-    try{
-     const del = await prisma.bookmark.delete({
-        where : {
-            postId,
-            userId,
-            id
+                postId,
+            },
+        });
+        if (bookmark) {
+            return true;
         }
-      })
-      if(del){
-        return true
-      }
-      return false
-    }
-    catch(e){
+        return false;
+    } catch (e) {
         console.error(e);
-        return null
+        return null;
     }
-}
+};
 
+export const deleteBookmark = async (postId: number, userId: string) => {
+    const id = await getBookmarkId(userId, postId);
+    try {
+        const del = await prisma.bookmark.delete({
+            where: {
+                postId,
+                userId,
+                id,
+            },
+        });
+        if (del) {
+            return true;
+        }
+        return false;
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+};
 
-export const getBookmarks = async (userId : string) => {
+export const getBookmarks = async (userId: string) => {
     try {
         const bookmarks = await prisma.bookmark.findMany({
-            where : {
-                userId
+            where: {
+                userId,
             },
-            select : {
-                id : true,
-                post : {
-                    select : {
-                        id : true,
-                        title : true, 
-                        content : true,
-                        authorId : true,
-                        publishDate : true,
+            select: {
+                id: true,
+                post: {
+                    select: {
+                        id: true,
+                        title: true,
+                        content: true,
+                        authorId: true,
+                        publishDate: true,
+                        views: true,
                         likes: true,
-                        comments:true,
-                        imgUrl : true,
-                        authorImgUrl : true,
-                        tags :true,
-                        author : {
-                            select : {
-                                name : true
-                            }
-                        }
-                    }
+                        comments: true,
+                        imgUrl: true,
+                        authorImgUrl: true,
+                        tags: true,
+                        author: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
                 },
 
-                userId:true,
-                postId:true,
-            }
-        })
-        return bookmarks
-    }
-    catch(e){
+                userId: true,
+                postId: true,
+            },
+        });
+        return bookmarks;
+    } catch (e) {
         console.error(e);
-        
     }
-}
+};
 
-const getBookmarkId = async (userId :string , postId :number) => {
+const getBookmarkId = async (userId: string, postId: number) => {
     const bookmark = await prisma.bookmark.findFirst({
-        where : {
+        where: {
             postId,
-            userId
+            userId,
         },
-        select : {
-            id : true
-        }
-    })
-    return bookmark?.id
-}
+        select: {
+            id: true,
+        },
+    });
+    return bookmark?.id;
+};
