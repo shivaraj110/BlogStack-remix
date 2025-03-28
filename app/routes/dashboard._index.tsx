@@ -16,6 +16,7 @@ interface PostWithAuthor extends Post {
 	_count: {
 		likes: number;
 		comments: number;
+		views: number;
 	};
 }
 
@@ -79,6 +80,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
 						select: {
 							likes: true,
 							comments: true,
+							views: true,
 						},
 					},
 				},
@@ -221,6 +223,7 @@ export default function DashboardPage() {
 						<BlogCard
 							key={blog.id}
 							id={blog.id}
+							views={blog._count.views}
 							title={blog.title}
 							content={blog.content}
 							likes={blog._count.likes}
@@ -243,8 +246,8 @@ export default function DashboardPage() {
 						<Link
 							to={`?page=${pagination.currentPage - 1}`}
 							className={`px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasPrevPage
-									? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
-									: "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
+								? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
+								: "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
 								}`}
 							onClick={(e) => !pagination.hasPrevPage && e.preventDefault()}
 						>
@@ -256,8 +259,8 @@ export default function DashboardPage() {
 						<Link
 							to={`?page=${pagination.currentPage + 1}`}
 							className={`px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasNextPage
-									? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
-									: "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
+								? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
+								: "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
 								}`}
 							onClick={(e) => !pagination.hasNextPage && e.preventDefault()}
 						>

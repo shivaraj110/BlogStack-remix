@@ -31,6 +31,7 @@ model User {
   openToCollab Boolean      @default(true)
   joinedOn     DateTime     @default(now())
   likes        Like[]
+  views        View[]
 }
 
 model Connection {
@@ -54,6 +55,7 @@ model Post {
   comments     Comment[]
   imgUrl       String
   likes        Like[]
+  views        View[]
 }
 
 model Bookmark {
@@ -66,6 +68,15 @@ model Bookmark {
 }
 
 model Like {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [identifier], onDelete: Cascade)
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  createdAt DateTime @default(now())
+}
+
+model View {
   id        Int      @id @default(autoincrement())
   user      User     @relation(fields: [userId], references: [identifier], onDelete: Cascade)
   userId    String

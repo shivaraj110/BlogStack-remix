@@ -17,6 +17,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
 			content: true,
 			comments: true,
 			likes: true,
+			views: true,
 			authorId: true,
 			imgUrl: true,
 			publishDate: true,
@@ -70,6 +71,7 @@ const MyBlogs = () => {
 		imgUrl: string;
 		authorImgUrl: string;
 		likes: [];
+		views: [];
 		tags: string[];
 		author: {
 			name: string;
@@ -83,10 +85,11 @@ const MyBlogs = () => {
 			<h2 className="text-2xl font-bold">{"Your posts till now"}</h2>
 			<div className="grid grid-cols-1 mt-10 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{blogs.map((b: BlogData) => (
-					<div className="flex">
+					<div className="">
 						<BlogCard
 							deleteable={true}
 							key={b.id}
+							views={b.views.length}
 							imgUrl={b.imgUrl}
 							authorImgUrl={b.authorImgUrl}
 							authorName={b.author.name || "Anonymous"}
@@ -101,13 +104,8 @@ const MyBlogs = () => {
 							id={Number(b.id)}
 							bookmarked={true}
 						/>
-						<div
-							className="bg-gradient-to-b from-[#111111] to-[#0c0c0c] rounded-xl overflow-hidden shadow-md border border-white/5 animate-pulse hidden hover:flex w-[100px] h-[50px]"
-						>
-
-						</div>
+						<div className="bg-gradient-to-b from-[#111111] to-[#0c0c0c] rounded-xl overflow-hidden shadow-md border border-white/5 animate-pulse hidden hover:flex w-[100px] h-[50px]"></div>
 					</div>
-
 				))}
 			</div>
 		</div>

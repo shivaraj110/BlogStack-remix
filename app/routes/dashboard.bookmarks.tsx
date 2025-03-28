@@ -43,6 +43,7 @@ export default function() {
     <div className="grid grid-cols-1 mt-10 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {blogs.map((b) => (
         <BlogCard
+          views={b.post.views.length}
           authorId={b.post.authorId}
           comments={b.post.comments.length}
           likeCount={b.post.likes.length}

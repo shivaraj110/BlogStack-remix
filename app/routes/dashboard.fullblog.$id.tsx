@@ -14,6 +14,7 @@ import {
 	User as UserIcon,
 	Image as ImageIcon,
 	Trash2,
+	EyeIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getBookmarks } from "~/.server/bookmark";
@@ -21,7 +22,7 @@ import { prisma } from "~/.server/db";
 import { getLikes } from "~/.server/likes";
 
 export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
-	const { userId } = await getAuth(args);
+	const { userId } = (await getAuth(args)) ?? "";
 	const id = Number(args.params["id"]);
 
 	try {
@@ -37,6 +38,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
 				authorId: true,
 				imgUrl: true,
 				likes: true,
+				views: true,
 				publishDate: true,
 				authorImgUrl: true,
 				author: {
@@ -85,6 +87,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
 				publishDate: true,
 				authorImgUrl: true,
 				likes: true,
+				views: true,
 				tags: true,
 				author: {
 					select: {
@@ -93,6 +96,24 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
 				},
 			},
 		});
+
+		//update views
+		const isViewed = await prisma.view.findFirst({
+			where: {
+				userId: userId?.toString() ?? "",
+
+				postId: id,
+			},
+		});
+
+		if (!isViewed?.id) {
+			await prisma.view.create({
+				data: {
+					userId: userId?.toString() ?? "",
+					postId: id,
+				},
+			});
+		}
 
 		const bookmarks = await getBookmarks(userId ?? "");
 		const Likes = await getLikes(userId ?? "");
@@ -111,7 +132,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
 			},
 		};
 	} catch (e) {
-		redirect("/dashboard")
+		redirect("/dashboard");
 		return {
 			status: "failure",
 		};
@@ -132,6 +153,7 @@ const FullBlog = () => {
 		publishDate: string;
 		tags: string[];
 		likes: [];
+		views: [];
 		imgUrl: string;
 		author: {
 			name: string;
@@ -177,7 +199,7 @@ const FullBlog = () => {
 	const [comment, setComment] = useState<string>("");
 	const fetcher = useFetcher();
 	const [isBookmarked, setIsBookmarked] = useState(BookMarked);
-	const deleteFetcher = useFetcher()
+	const deleteFetcher = useFetcher();
 	useEffect(() => {
 		setIsLiked(Liked());
 		setIsBookmarked(BookMarked());
@@ -316,8 +338,8 @@ const FullBlog = () => {
 										>
 											<Heart
 												className={`h-4 sm:h-5 sm:w-5 ${isLiked
-													? "fill-current text-red-500"
-													: "text-white/70 group-hover:text-red-500"
+														? "fill-current text-red-500"
+														: "text-white/70 group-hover:text-red-500"
 													} transition-colors duration-200`}
 											/>
 											<span
@@ -348,8 +370,8 @@ const FullBlog = () => {
 										>
 											<Bookmark
 												className={`h-4 sm:h-5 sm:w-5 ${isBookmarked
-													? "fill-current text-blue-500"
-													: "text-white/70 group-hover:text-blue-500"
+														? "fill-current text-blue-500"
+														: "text-white/70 group-hover:text-blue-500"
 													} transition-colors duration-200`}
 											/>
 											<span
@@ -368,22 +390,28 @@ const FullBlog = () => {
 										<Share2 className=" h-4 sm:h-5 sm:w-5 group-hover:text-blue-400" />
 										<span>Share</span>
 									</button>
-									{
-										blog.authorId === user?.id ? <button
+									{blog.authorId === user?.id ? (
+										<button
 											className="p-2 rounded-lg hover:bg-red-200/30"
 											onClick={() => {
-												deleteFetcher.submit({
-													id: blog.id
-												}, {
-													action: "/deleteBlog",
-													method: "DELETE"
-												})
-											}}>
-											<Trash2
-												className="h-4 w-4 text-red-400"
-											/>
-										</button> : null
-									}
+												deleteFetcher.submit(
+													{
+														id: blog.id,
+													},
+													{
+														action: "/deleteBlog",
+														method: "DELETE",
+													}
+												);
+											}}
+										>
+											<Trash2 className="h-4 w-4 text-red-400" />
+										</button>
+									) : null}
+									<div className="flex items-center justify-between gap-1 text-white/70">
+										<EyeIcon className="h-4 w-4" />
+										{blog.views.length}
+									</div>
 								</div>
 
 								<div className="flex items-center space-x-2">
@@ -462,8 +490,8 @@ const FullBlog = () => {
 															setTimeout(() => setComment(""), 100)
 														}
 														className={`p-1 rounded-full ${comment
-															? "text-blue-500 hover:bg-white/5"
-															: "text-white/30"
+																? "text-blue-500 hover:bg-white/5"
+																: "text-white/30"
 															} transition-colors`}
 													>
 														<SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />

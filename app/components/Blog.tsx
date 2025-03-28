@@ -9,6 +9,7 @@ import {
 	ArrowRight,
 	Share2,
 	Trash2,
+	EyeIcon,
 } from "lucide-react";
 import { BlogData } from "~/types/BlogData";
 import { useState, useEffect } from "react";
@@ -79,7 +80,7 @@ const BlogCard = (blog: BlogData) => {
 	const [likeCount, setLikeCount] = useState(blog.likes);
 	const [isLoading, setIsLoading] = useState(true);
 	const { user } = useUser();
-	const deleteFetcher = useFetcher()
+	const deleteFetcher = useFetcher();
 	const likeFetcher = useFetcher();
 	const bookmarkFetcher = useFetcher();
 	const readingTime = calculateReadingTime(blog.content);
@@ -263,24 +264,30 @@ const BlogCard = (blog: BlogData) => {
 				</Link>
 
 				{/* Author and date */}
-				<div className="flex items-center text-sm text-white/60 mb-4">
-					<div className="relative">
-						<img
-							src={blog.authorImgUrl || "https://via.placeholder.com/32"}
-							alt={blog.authorName || "Anonymous"}
-							className="w-8 h-8 rounded-full mr-3 border border-white/10 object-cover"
-							onError={(e) => {
-								e.currentTarget.src = "https://via.placeholder.com/32";
-							}}
-						/>
+				<div className="flex items-center justify-between text-sm text-white/60 mb-4">
+					<div className="flex items-center">
+						<div className="relative">
+							<img
+								src={blog.authorImgUrl || "https://via.placeholder.com/32"}
+								alt={blog.authorName || "Anonymous"}
+								className="w-8 h-8 rounded-full mr-3 border border-white/10 object-cover"
+								onError={(e) => {
+									e.currentTarget.src = "https://via.placeholder.com/32";
+								}}
+							/>
+						</div>
+						<div>
+							<p className="font-medium text-white/80">
+								{blog.authorName || "Anonymous"}
+							</p>
+							<p className="text-xs">
+								{format(new Date(blog.publishDate), "MMM d, yyyy")}
+							</p>
+						</div>
 					</div>
-					<div>
-						<p className="font-medium text-white/80">
-							{blog.authorName || "Anonymous"}
-						</p>
-						<p className="text-xs">
-							{format(new Date(blog.publishDate), "MMM d, yyyy")}
-						</p>
+					<div className="flex gap-1 items-center mr-2">
+						<EyeIcon className="h-4 w-4" />
+						{blog.views}
 					</div>
 				</div>
 
@@ -293,8 +300,8 @@ const BlogCard = (blog: BlogData) => {
 						<button
 							onClick={toggleLike}
 							className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg transition-colors ${isLiked
-								? "text-red-400 bg-red-500/10"
-								: "text-white/60 hover:text-white/90 hover:bg-white/5"
+									? "text-red-400 bg-red-500/10"
+									: "text-white/60 hover:text-white/90 hover:bg-white/5"
 								}`}
 						>
 							<Heart
@@ -333,8 +340,8 @@ const BlogCard = (blog: BlogData) => {
 						<button
 							onClick={toggleBookmark}
 							className={`p-2 rounded-lg transition-colors ${isBookmarked
-								? "text-blue-400 bg-blue-500/10"
-								: "text-white/60 hover:text-white/90 hover:bg-white/5"
+									? "text-blue-400 bg-blue-500/10"
+									: "text-white/60 hover:text-white/90 hover:bg-white/5"
 								}`}
 						>
 							<Bookmark
@@ -343,22 +350,24 @@ const BlogCard = (blog: BlogData) => {
 									}`}
 							/>
 						</button>
-						{
-							blog.deleteable ? <button
+						{blog.deleteable ? (
+							<button
 								className="p-2 rounded-lg hover:bg-red-200/30"
 								onClick={() => {
-									deleteFetcher.submit({
-										id: blog.id
-									}, {
-										action: "/deleteBlog",
-										method: "DELETE"
-									})
-								}}>
-								<Trash2
-									className="h-4 w-4 text-red-400"
-								/>
-							</button> : null
-						}
+									deleteFetcher.submit(
+										{
+											id: blog.id,
+										},
+										{
+											action: "/deleteBlog",
+											method: "DELETE",
+										}
+									);
+								}}
+							>
+								<Trash2 className="h-4 w-4 text-red-400" />
+							</button>
+						) : null}
 						<Link
 							to={`/dashboard/fullblog/${blog.id}`}
 							className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-all duration-200 font-medium text-xs"

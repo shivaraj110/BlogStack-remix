@@ -22,6 +22,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
 				title: true,
 				content: true,
 				comments: true,
+				views: true,
 				likes: true,
 				authorId: true,
 				imgUrl: true,
@@ -72,6 +73,7 @@ export default function() {
 		authorId: number;
 		publishDate: string;
 		likes: [];
+		views: [];
 		comments: [];
 		imgUrl: string;
 		authorImgUrl: string;
@@ -101,18 +103,14 @@ export default function() {
 			<div className="mt- flex gap-2 text-2xl font-bold">
 				{"Showing results for"}{" "}
 				<div className="flex gap-1 items-center">
-
-					<Tag
-						className="size-4 text-blue-300"
-					/>
+					<Tag className="size-4 text-blue-300" />
 					<p className="text-blue-600"> {body.tag} </p>
 				</div>
-
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-2 mt-4 lg:grid-cols-3 gap-6">
-
 				{blogs.map((b) => (
 					<BlogPost
+						views={b.views.length}
 						authorId={b.authorId}
 						key={b.id}
 						imgUrl={
@@ -134,6 +132,5 @@ export default function() {
 				))}
 			</div>
 		</div>
-
 	);
 }
