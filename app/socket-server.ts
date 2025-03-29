@@ -1,6 +1,8 @@
 import { Server as SocketIOServer } from "socket.io";
 import type { Server } from "node:http";
 import { prisma } from "./.server/db";
+import { createAdapter } from "@socket.io/redis-adapter";
+import Redis from "ioredis";
 
 // Define TypeScript interfaces for better type safety
 interface UserConnection {
@@ -136,7 +138,7 @@ async function findOrCreateConversation(userId1: string, userId2: string) {
 /**
  * Initialize Socket.IO server
  */
-export function initSocketServer(server: Server) {
+export async function initSocketServer(server: Server) {
   if (io) return io;
 
   // Create new Socket.IO server with secure configuration
@@ -158,6 +160,45 @@ export function initSocketServer(server: Server) {
         : false,
     maxHttpBufferSize: 1e6, // 1MB
   });
+
+  // Set up Redis adapter for production
+  if (process.env.NODE_ENV === "production") {
+    try {
+      const REDIS_URL = process.env.REDIS_HOST || "redis://localhost:6379";
+
+      // Create Redis clients for pub/sub using ioredis
+      const pubClient = new Redis(REDIS_URL, {
+        retryStrategy: (times: number) => Math.min(times * 50, 2000), // Retry with backoff
+      });
+
+      const subClient = pubClient.duplicate();
+
+      // Handle Redis connection errors
+      pubClient.on("error", (err: Error) => {
+        console.error("Redis pub client error:", err);
+      });
+
+      subClient.on("error", (err: Error) => {
+        console.error("Redis sub client error:", err);
+      });
+
+      // Log successful connections
+      pubClient.on("connect", () => {
+        console.log("Redis pub client connected successfully");
+      });
+
+      subClient.on("connect", () => {
+        console.log("Redis sub client connected successfully");
+      });
+
+      // Apply Redis adapter to Socket.IO server
+      io.adapter(createAdapter(pubClient, subClient));
+      console.log("Socket.IO now using Redis adapter for scaling");
+    } catch (error) {
+      console.error("Failed to initialize Redis adapter:", error);
+      console.warn("Falling back to in-memory adapter");
+    }
+  }
 
   // Set up connection handler
   io.on("connection", (socket) => {

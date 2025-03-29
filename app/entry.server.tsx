@@ -17,7 +17,7 @@ const SOCKET_PORT = 8081;
 const FALLBACK_PORTS = [8082, 8083, 8084, 8085]; // Fallback ports to try if main port is busy
 
 // Initialize Socket.IO server only in development mode
-export let io: ReturnType<typeof initSocketServer> | null = null;
+export let io: Awaited<ReturnType<typeof initSocketServer>> | null = null;
 // Export the socket port for client-side code to access
 export let activeSocketPort = SOCKET_PORT;
 
@@ -25,31 +25,41 @@ export let activeSocketPort = SOCKET_PORT;
 if (process.env.NODE_ENV === "development") {
   try {
     const httpServer = createServer();
-    io = initSocketServer(httpServer);
 
-    // Use port 8081 for the WebSocket server
-    const startServer = (port: number, fallbacks: number[] = []) => {
-      httpServer
-        .listen(port, () => {
-          console.log(`📱 WebSocket server running on port ${port}`);
-          activeSocketPort = port;
+    // Use async IIFE to handle async socket initialization
+    (async () => {
+      try {
+        io = await initSocketServer(httpServer);
 
-          // Write the port to a file that will be loaded by the client
-          if (typeof window !== "undefined") {
-            localStorage.setItem("socketPort", String(port));
-          }
-        })
-        .on("error", (err: any) => {
-          if (err.code === "EADDRINUSE" && fallbacks.length > 0) {
-            console.log(`⚠️ Port ${port} is busy, trying ${fallbacks[0]}...`);
-            startServer(fallbacks[0], fallbacks.slice(1));
-          } else {
-            console.error("Failed to start WebSocket server:", err);
-          }
-        });
-    };
+        // Use port 8081 for the WebSocket server
+        const startServer = (port: number, fallbacks: number[] = []) => {
+          httpServer
+            .listen(port, () => {
+              console.log(`📱 WebSocket server running on port ${port}`);
+              activeSocketPort = port;
 
-    startServer(SOCKET_PORT, FALLBACK_PORTS);
+              // Write the port to a file that will be loaded by the client
+              if (typeof window !== "undefined") {
+                localStorage.setItem("socketPort", String(port));
+              }
+            })
+            .on("error", (err: any) => {
+              if (err.code === "EADDRINUSE" && fallbacks.length > 0) {
+                console.log(
+                  `⚠️ Port ${port} is busy, trying ${fallbacks[0]}...`
+                );
+                startServer(fallbacks[0], fallbacks.slice(1));
+              } else {
+                console.error("Failed to start WebSocket server:", err);
+              }
+            });
+        };
+
+        startServer(SOCKET_PORT, FALLBACK_PORTS);
+      } catch (error) {
+        console.error("Failed to initialize Socket.IO server:", error);
+      }
+    })();
   } catch (err) {
     console.error("Failed to start WebSocket server:", err);
   }
