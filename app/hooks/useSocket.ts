@@ -41,7 +41,7 @@ const getSocketUrl = (): string => {
 
   // Default port for WebSocket in development
   console.log("Using default WebSocket port: 8081");
-  return "http://localhost:8081";
+  return "https://blogstack-socketserver.onrender.com";
 };
 
 /**
@@ -102,7 +102,7 @@ export function useSocket(): SocketHookResult {
     hasInitialized.current = true;
     setConnecting(true);
 
-    const SOCKET_URL = getSocketUrl();
+    const SOCKET_URL = "https://blogstack-socketserver.onrender.com"
     console.log(`Attempting to connect to socket server at: ${SOCKET_URL}`);
 
     // If we have an existing socket, clean it up first
@@ -252,8 +252,7 @@ export function useSocket(): SocketHookResult {
       }
 
       console.log(
-        `Sending message to ${receiverId}${
-          conversationId ? ` in conversation ${conversationId}` : ""
+        `Sending message to ${receiverId}${conversationId ? ` in conversation ${conversationId}` : ""
         }: ${content.substring(0, 20)}${content.length > 20 ? "..." : ""}`
       );
 
