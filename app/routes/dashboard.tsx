@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import SocketInitializer from "~/components/SocketInitializer";
+import ToastContainer from "~/components/ToastContainer";
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
@@ -157,6 +158,9 @@ const Dashboard = () => {
     <div className="flex h-screen bg-gradient-to-br from-[#0a0a0a] to-[#111827] text-white overflow-hidden">
       {/* Socket initializer */}
       <SocketInitializer />
+
+      {/* Toast notifications container */}
+      <ToastContainer />
 
       {/* Overlay for mobile */}
       {sidebarOpen && (
