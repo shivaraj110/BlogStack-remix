@@ -12,10 +12,12 @@ const getSocketUrl = (): string => {
 
   // For production, use same hostname but with ws protocol
   if (window.location.hostname !== "localhost") {
-    return window.location.origin.replace(
+    const url = window.location.origin.replace(
       /^http/,
       window.location.protocol === "https:" ? "wss" : "ws"
     );
+    console.log(`Using WebSocket URL: ${url}`);
+    return url;
   }
 
   // For development, use port from localStorage or default to 8081
@@ -93,10 +95,12 @@ export function useSocket(): SocketHookResult {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       randomizationFactor: 0.5,
-      timeout: 10000,
+      timeout: 20000, // Increased timeout
       autoConnect: true,
       forceNew: true,
       secure: window.location.protocol === "https:",
+      transports: ["websocket", "polling"], // Try WebSocket first, fall back to polling
+      path: "/socket.io/", // Explicitly set the path
     });
 
     // Set up event listeners

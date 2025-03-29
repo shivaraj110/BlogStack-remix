@@ -164,11 +164,35 @@ export async function initSocketServer(server: Server) {
   // Set up Redis adapter for production
   if (process.env.NODE_ENV === "production") {
     try {
-      const REDIS_URL = process.env.REDIS_HOST || "redis://localhost:6379";
+      // Build Redis URL from individual environment variables if they exist
+      let REDIS_URL;
+      if (process.env.REDIS_HOST) {
+        const host = process.env.REDIS_HOST;
+        const port = process.env.REDIS_PORT || "6379";
+        const username = process.env.REDIS_USERNAME || "";
+        const password = process.env.REDIS_PASSWORD || "";
+
+        if (username && password) {
+          REDIS_URL = `redis://${username}:${password}@${host}:${port}`;
+        } else if (password) {
+          REDIS_URL = `redis://:${password}@${host}:${port}`;
+        } else {
+          REDIS_URL = `redis://${host}:${port}`;
+        }
+      } else {
+        REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+      }
+
+      console.log(
+        `Connecting to Redis at: ${REDIS_URL.replace(/:[^:]*@/, ":***@")}`
+      ); // Hide password in logs
 
       // Create Redis clients for pub/sub using ioredis
       const pubClient = new Redis(REDIS_URL, {
         retryStrategy: (times: number) => Math.min(times * 50, 2000), // Retry with backoff
+        tls: process.env.REDIS_TLS === "true" ? {} : undefined, // Enable TLS if configured
+        maxRetriesPerRequest: 5,
+        connectTimeout: 10000,
       });
 
       const subClient = pubClient.duplicate();
