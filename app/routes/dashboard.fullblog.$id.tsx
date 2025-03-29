@@ -36,6 +36,8 @@ interface Reply {
   createdAt: Date;
   updatedAt: Date;
   user: CommentUser;
+  replies?: Reply[];
+  parentId?: number;
 }
 
 interface Comment {
@@ -51,6 +53,7 @@ interface Comment {
 interface FetcherResponse {
   status: string;
   message?: string;
+  comments?: Comment[];
 }
 
 export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
@@ -164,6 +167,11 @@ const FullBlog = () => {
   const { body } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [replyingToReply, setReplyingToReply] = useState<{
+    id: number;
+    parentId?: number;
+  } | null>(null);
 
   const blog: {
     id: number;
@@ -222,7 +230,7 @@ const FullBlog = () => {
   const [editText, setEditText] = useState<string>("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [editingComment, setEditingComment] = useState<number | null>(null);
-  const fetcher = useFetcher();
+  const fetcher = useFetcher<FetcherResponse>();
   const [isBookmarked, setIsBookmarked] = useState(BookMarked);
   const deleteFetcher = useFetcher<FetcherResponse>();
   const replyFetcher = useFetcher<FetcherResponse>();
@@ -233,6 +241,12 @@ const FullBlog = () => {
     // Scroll to top when blog loads
     window.scrollTo(0, 0);
   }, [blog.id, Liked(), BookMarked()]);
+
+  useEffect(() => {
+    if (body.blog.comments) {
+      setComments(body.blog.comments);
+    }
+  }, [body.blog.comments]);
 
   // Format date for better display
   const formatDate = (dateString: string) => {
@@ -316,19 +330,241 @@ const FullBlog = () => {
     setEditingComment(null);
   };
 
-  // Add useEffect to refresh comments after actions
-  useEffect(() => {
-    if (
-      (deleteFetcher.state === "idle" &&
-        deleteFetcher.data?.status === "success") ||
-      (editFetcher.state === "idle" &&
-        editFetcher.data?.status === "success") ||
-      (replyFetcher.state === "idle" && replyFetcher.data?.status === "success")
-    ) {
-      // Refresh the page to get updated comments
-      window.location.reload();
+  // Function to add a reply
+  const addReply = async (
+    parentId: number,
+    replyText: string,
+    parentReplyId?: number
+  ) => {
+    if (!replyText.trim()) return;
+
+    try {
+      replyFetcher.submit(
+        {
+          commentId: parentId.toString(),
+          content: replyText,
+          parentReplyId: parentReplyId?.toString(),
+        } as any,
+        {
+          method: "post",
+          action: "/api/addreply",
+        }
+      );
+
+      // Optimistically update the UI
+      const newReply = {
+        id: Date.now(), // Temporary ID until page refresh
+        content: replyText,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        user: {
+          name: user?.fullName || "",
+          pfpUrl: user?.imageUrl || "",
+          identifier: user?.id || "",
+        },
+        replies: [],
+        parentId: parentReplyId,
+      };
+
+      setComments((prevComments) => {
+        return prevComments.map((comment) => {
+          if (comment.id === parentId) {
+            return {
+              ...comment,
+              replies: [newReply, ...comment.replies],
+            };
+          }
+          return comment;
+        });
+      });
+
+      setReplyText("");
+      setReplyingTo(null);
+      setReplyingToReply(null);
+    } catch (error) {
+      console.error("Error adding reply:", error);
     }
-  }, [deleteFetcher.state, editFetcher.state, replyFetcher.state]);
+  };
+
+  // Function to add a new comment
+  const addComment = async (commentText: string) => {
+    if (!commentText.trim()) return;
+
+    try {
+      fetcher.submit(
+        {
+          postId: blog.id.toString(),
+          comment: commentText,
+        } as any,
+        {
+          method: "post",
+          action: "/api/pushcomment",
+        }
+      );
+
+      // Optimistically update the UI
+      const newComment = {
+        id: Date.now(), // Temporary ID until page refresh
+        comment: commentText,
+        commentedAt: new Date(),
+        updatedAt: new Date(),
+        userId: user?.id || "",
+        user: {
+          name: user?.fullName || "",
+          pfpUrl: user?.imageUrl || "",
+          identifier: user?.id || "",
+        },
+        replies: [],
+      };
+      setComments((prevComments) => [newComment, ...prevComments]);
+      setComment("");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  };
+
+  // Update useEffect to handle fetcher states
+  useEffect(() => {
+    if (fetcher.state === "idle" && fetcher.data?.status === "success") {
+      // Refresh comments from the server
+      const updatedComments = fetcher.data.comments;
+      if (updatedComments) {
+        setComments(updatedComments);
+      }
+    }
+
+    if (
+      replyFetcher.state === "idle" &&
+      replyFetcher.data?.status === "success"
+    ) {
+      // Refresh comments from the server
+      const updatedComments = replyFetcher.data.comments;
+      if (updatedComments) {
+        setComments(updatedComments);
+      }
+    }
+
+    if (
+      deleteFetcher.state === "idle" &&
+      deleteFetcher.data?.status === "success"
+    ) {
+      // Refresh comments from the server
+      const updatedComments = deleteFetcher.data.comments;
+      if (updatedComments) {
+        setComments(updatedComments);
+      }
+    }
+
+    if (
+      editFetcher.state === "idle" &&
+      editFetcher.data?.status === "success"
+    ) {
+      // Refresh comments from the server
+      const updatedComments = editFetcher.data.comments;
+      if (updatedComments) {
+        setComments(updatedComments);
+      }
+    }
+  }, [
+    fetcher.state,
+    replyFetcher.state,
+    deleteFetcher.state,
+    editFetcher.state,
+  ]);
+
+  // Function to render nested replies
+  const renderReplies = (replies: Reply[], parentId: number) => {
+    return replies.map((reply: Reply) => (
+      <div key={reply.id} className="pt-2 pl-4 border-l border-white/10">
+        <div className="flex items-start gap-2">
+          <img
+            src={reply.user.pfpUrl || "https://via.placeholder.com/30"}
+            alt={reply.user.name}
+            className="w-6 h-6 rounded-full border border-white/10"
+            onError={(e) => {
+              e.currentTarget.src = "https://via.placeholder.com/30";
+            }}
+          />
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-xs">{reply.user.name}</span>
+                <span className="text-[10px] text-white/50">
+                  {new Date(reply.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
+              {user?.id === reply.user.identifier && (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleDelete(reply.id)}
+                    className="text-white/60 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+            <p className="text-white/80 text-xs">{reply.content}</p>
+
+            {/* Reply to reply button */}
+            <button
+              onClick={() =>
+                setReplyingToReply({ id: parentId, parentId: reply.id })
+              }
+              className="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+            >
+              <ReplyIcon className="w-3 h-3" />
+              Reply
+            </button>
+
+            {/* Reply to reply form */}
+            {replyingToReply?.parentId === reply.id && (
+              <div className="mt-3 pl-3">
+                <div className="flex items-start gap-2">
+                  <input
+                    type="text"
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    className="flex-1 p-2 bg-[#0a0a0a] border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-white text-xs"
+                    placeholder="Write a reply..."
+                  />
+                  <button
+                    onClick={() => addReply(parentId, replyText, reply.id)}
+                    disabled={!replyText.trim()}
+                    className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Reply
+                  </button>
+                  <button
+                    onClick={() => setReplyingToReply(null)}
+                    className="px-2 py-1 bg-[#333] text-white rounded text-xs hover:bg-[#444] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Nested replies */}
+            {reply.replies && reply.replies.length > 0 && (
+              <div className="mt-2">
+                {renderReplies(reply.replies, parentId)}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    ));
+  };
+
+  // Update the comment input handler
+  const handleCommentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addComment(comment);
+  };
 
   return (
     <div className="min-h-screen text-white pb-6 md:pb-10">
@@ -562,45 +798,24 @@ const FullBlog = () => {
                           onChange={(e) => setComment(e.target.value)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                              fetcher.submit(
-                                {
-                                  postId: blog.id.toString(),
-                                  comment: comment,
-                                },
-                                {
-                                  method: "post",
-                                  action:
-                                    comment !== "" ? "/api/pushcomment" : "",
-                                }
-                              );
-                              setComment("");
+                              e.preventDefault();
+                              handleCommentSubmit(e);
                             }
                           }}
                           placeholder="Add a comment..."
                           className="w-full p-2 sm:p-3 pr-10 sm:pr-12 bg-[#0a0a0a] border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-white/40 text-white text-sm"
                         />
-                        <fetcher.Form
-                          method="POST"
-                          action={comment !== "" ? "/api/pushcomment" : ""}
-                          className="absolute right-2 top-1/2 -translate-y-1/2"
+                        <button
+                          onClick={handleCommentSubmit}
+                          disabled={!comment}
+                          className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full ${
+                            comment
+                              ? "text-blue-500 hover:bg-white/5"
+                              : "text-white/30"
+                          } transition-colors`}
                         >
-                          <input type="hidden" name="postId" value={blog.id} />
-                          <input type="hidden" name="comment" value={comment} />
-                          <button
-                            type="submit"
-                            disabled={!comment}
-                            onClick={() =>
-                              setTimeout(() => setComment(""), 100)
-                            }
-                            className={`p-1 rounded-full ${
-                              comment
-                                ? "text-blue-500 hover:bg-white/5"
-                                : "text-white/30"
-                            } transition-colors`}
-                          >
-                            <SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
-                          </button>
-                        </fetcher.Form>
+                          <SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -608,7 +823,7 @@ const FullBlog = () => {
 
                 {/* Comments List */}
                 <div className="space-y-4 sm:space-y-6 max-h-[400px] sm:max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                  {blog.comments.length === 0 ? (
+                  {comments.length === 0 ? (
                     <div className="text-center p-6 sm:p-8 text-white/50">
                       <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 opacity-30" />
                       <p className="text-sm sm:text-base">
@@ -616,7 +831,7 @@ const FullBlog = () => {
                       </p>
                     </div>
                   ) : (
-                    blog.comments.map((comment: any) => (
+                    comments.map((comment: Comment) => (
                       <div
                         key={comment.id}
                         className="border-b border-white/5 pb-4 sm:pb-6"
@@ -749,58 +964,8 @@ const FullBlog = () => {
 
                             {/* Comment replies */}
                             {comment.replies && comment.replies.length > 0 && (
-                              <div className="mt-3 space-y-3 pl-4 border-l border-white/10">
-                                {comment.replies.map((reply: any) => (
-                                  <div key={reply.id} className="pt-2">
-                                    <div className="flex items-start gap-2">
-                                      <img
-                                        src={
-                                          reply.user.pfpUrl ||
-                                          "https://via.placeholder.com/30"
-                                        }
-                                        alt={reply.user.name}
-                                        className="w-6 h-6 rounded-full border border-white/10"
-                                        onError={(e) => {
-                                          e.currentTarget.src =
-                                            "https://via.placeholder.com/30";
-                                        }}
-                                      />
-                                      <div className="flex-1">
-                                        <div className="flex items-center justify-between">
-                                          <div className="flex items-center gap-2">
-                                            <span className="font-medium text-xs">
-                                              {reply.user.name}
-                                            </span>
-                                            <span className="text-[10px] text-white/50">
-                                              {new Date(
-                                                reply.createdAt
-                                              ).toLocaleDateString("en-US", {
-                                                month: "short",
-                                                day: "numeric",
-                                              })}
-                                            </span>
-                                          </div>
-                                          {user?.id ===
-                                            reply.user.identifier && (
-                                            <div className="flex space-x-2">
-                                              <button
-                                                onClick={() =>
-                                                  handleDelete(reply.id)
-                                                }
-                                                className="text-white/60 hover:text-red-500 transition-colors"
-                                              >
-                                                <Trash2 className="w-3 h-3" />
-                                              </button>
-                                            </div>
-                                          )}
-                                        </div>
-                                        <p className="text-white/80 text-xs">
-                                          {reply.content}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
+                              <div className="mt-3">
+                                {renderReplies(comment.replies, comment.id)}
                               </div>
                             )}
                           </div>
