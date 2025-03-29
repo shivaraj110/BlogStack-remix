@@ -141,6 +141,8 @@ async function findOrCreateConversation(userId1: string, userId2: string) {
 export async function initSocketServer(server: Server) {
   if (io) return io;
 
+  console.log("Initializing Socket.IO server...");
+
   // Create new Socket.IO server with secure configuration
   io = new SocketIOServer(server, {
     cors: {
@@ -161,8 +163,12 @@ export async function initSocketServer(server: Server) {
     maxHttpBufferSize: 1e6, // 1MB
   });
 
-  // Set up Redis adapter for production
-  if (process.env.NODE_ENV === "production") {
+  // Set up Redis adapter for production or when testing Redis in development
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.TEST_REDIS === "true"
+  ) {
+    console.log("Redis adapter configuration starting...");
     try {
       // Build Redis URL from individual environment variables if they exist
       let REDIS_URL;
@@ -185,7 +191,10 @@ export async function initSocketServer(server: Server) {
 
       console.log(
         `Connecting to Redis at: ${REDIS_URL.replace(/:[^:]*@/, ":***@")}`
-      ); // Hide password in logs
+      );
+      console.log(
+        `Redis TLS enabled: ${process.env.REDIS_TLS === "true" ? "Yes" : "No"}`
+      );
 
       // Create Redis clients for pub/sub using ioredis
       const pubClient = new Redis(REDIS_URL, {
@@ -222,6 +231,8 @@ export async function initSocketServer(server: Server) {
       console.error("Failed to initialize Redis adapter:", error);
       console.warn("Falling back to in-memory adapter");
     }
+  } else {
+    console.log("Using default in-memory adapter (not using Redis)");
   }
 
   // Set up connection handler

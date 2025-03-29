@@ -30,6 +30,7 @@ if (process.env.NODE_ENV === "development") {
     (async () => {
       try {
         io = await initSocketServer(httpServer);
+        console.log("Socket.IO server initialized successfully");
 
         // Use port 8081 for the WebSocket server
         const startServer = (port: number, fallbacks: number[] = []) => {
@@ -37,13 +38,27 @@ if (process.env.NODE_ENV === "development") {
             .listen(port, () => {
               console.log(`📱 WebSocket server running on port ${port}`);
               activeSocketPort = port;
+              console.log(`Active socket port set to: ${activeSocketPort}`);
 
               // Write the port to a file that will be loaded by the client
               if (typeof window !== "undefined") {
-                localStorage.setItem("socketPort", String(port));
+                try {
+                  localStorage.setItem("socketPort", String(port));
+                  console.log(`Socket port ${port} saved to localStorage`);
+                } catch (err) {
+                  console.warn("Cannot save socket port to localStorage:", err);
+                }
+              } else {
+                console.log("Running on server, skipping localStorage update");
+                // In server environment, we can't use localStorage
+                // The client will get the port from the useSocket hook logic
               }
             })
             .on("error", (err: any) => {
+              console.error(
+                `Error starting WebSocket server on port ${port}:`,
+                err
+              );
               if (err.code === "EADDRINUSE" && fallbacks.length > 0) {
                 console.log(
                   `⚠️ Port ${port} is busy, trying ${fallbacks[0]}...`

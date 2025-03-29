@@ -12,17 +12,36 @@ const getSocketUrl = (): string => {
 
   // For production, use same hostname but with ws protocol
   if (window.location.hostname !== "localhost") {
-    const url = window.location.origin.replace(
-      /^http/,
-      window.location.protocol === "https:" ? "wss" : "ws"
-    );
-    console.log(`Using WebSocket URL: ${url}`);
+    // Log the original origin for debugging
+    console.log("Original origin:", window.location.origin);
+    console.log("Protocol:", window.location.protocol);
+
+    // Fix the protocol replacement to guarantee we get exactly wss:// or ws://
+    let url;
+    if (window.location.protocol === "https:") {
+      url = window.location.origin.replace(/^https?:\/\//, "wss://");
+    } else {
+      url = window.location.origin.replace(/^https?:\/\//, "ws://");
+    }
+
+    console.log(`Using production WebSocket URL: ${url}`);
     return url;
   }
 
-  // For development, use port from localStorage or default to 8081
-  const socketPort = localStorage.getItem("socketPort") || "8081";
-  return `http://localhost:${socketPort}`;
+  // For development, try to get port from localStorage or try common ports
+  try {
+    const socketPort = localStorage.getItem("socketPort");
+    if (socketPort) {
+      console.log(`Using WebSocket port from localStorage: ${socketPort}`);
+      return `http://localhost:${socketPort}`;
+    }
+  } catch (err) {
+    console.warn("Error accessing localStorage:", err);
+  }
+
+  // Default port for WebSocket in development
+  console.log("Using default WebSocket port: 8081");
+  return "http://localhost:8081";
 };
 
 /**
@@ -129,6 +148,7 @@ export function useSocket(): SocketHookResult {
 
     socketInstance.on("connect_error", (err) => {
       console.error("Socket connection error:", err.message);
+      console.error("Socket connection error details:", err);
       setConnected(false);
       setConnecting(false);
       connectionAttempts.current += 1;
