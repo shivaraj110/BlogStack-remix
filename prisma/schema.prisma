@@ -101,14 +101,18 @@ model Comment {
   Post        Post?     @relation(fields: [postId], references: [id])
   postId      Int?
   commentedAt DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
 }
 
 model Replies {
   id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  Comment   Comment? @relation(fields: [commentId], references: [id])
+  user      User     @relation(fields: [userId], references: [identifier])
+  userId    String
+  content   String
+  Comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
   commentId Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Message {
