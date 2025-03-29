@@ -81,7 +81,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
   const page = parseInt(url.searchParams.get("page") || "1");
   const take = MESSAGES_PER_PAGE;
-  const skip = (page - 1) * take;
 
   if (!userId || !conversationId) {
     return json({
@@ -159,9 +158,9 @@ export const loader = async (args: LoaderFunctionArgs) => {
       conversationId,
     },
     orderBy: {
-      createdAt: "desc", // Descending to get most recent first
+      createdAt: "asc", // Change to ascending order to get oldest first
     },
-    skip,
+    skip: Math.max(totalMessages - page * take, 0), // Calculate skip from the end
     take,
     include: {
       sender: {
@@ -186,10 +185,10 @@ export const loader = async (args: LoaderFunctionArgs) => {
   });
 
   // Determine if there are more messages to load
-  const hasMore = skip + messages.length < totalMessages;
+  const hasMore = totalMessages > page * take;
 
   return json<LoaderData>({
-    messages: messages.reverse(),
+    messages,
     conversation: {
       id: rawConversation.id,
       participants: rawConversation.users,
@@ -224,7 +223,6 @@ export default function ConversationPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [currentPage, setCurrentPage] = useState(initialPage);
   const [hasMoreMessages, setHasMoreMessages] = useState(hasMore);
   const [friendRequestSent, setFriendRequestSent] = useState(false);
   const [isFriend, setIsFriend] = useState(false);
@@ -235,14 +233,49 @@ export default function ConversationPage() {
   const lastScrollHeight = useRef(0);
   const lastScrollTop = useRef(0);
   const editInputRef = useRef<HTMLInputElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Initialize or reset message tracking when conversation changes
   useEffect(() => {
     processedMessageIds.current = new Set(initialMessages.map((msg) => msg.id));
     setLocalMessages(initialMessages);
-    setCurrentPage(initialPage);
     setHasMoreMessages(hasMore);
+    setIsAtBottom(true);
+    setShowScrollToBottom(false);
+    setUnreadCount(0);
+
+    // Scroll to bottom on initial load
+    requestAnimationFrame(() => {
+      scrollToBottom("auto");
+    });
   }, [initialMessages, conversation.id, initialPage, hasMore]);
+
+  // Helper function to scroll to bottom
+  const scrollToBottom = useCallback(
+    (behavior: "smooth" | "auto" = "smooth") => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior });
+        setIsAtBottom(true);
+        setShowScrollToBottom(false);
+        setUnreadCount(0);
+      }
+    },
+    []
+  );
+
+  // Check if user is scrolled to bottom
+  const isScrolledToBottom = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return true;
+
+    const threshold = 100; // pixels from bottom to consider "at bottom"
+    return (
+      container.scrollHeight - container.clientHeight - container.scrollTop <=
+      threshold
+    );
+  }, []);
 
   // Mark messages as read when conversation is opened
   useEffect(() => {
@@ -255,18 +288,34 @@ export default function ConversationPage() {
     }
   }, [conversation.id, connected, markAsRead, socket]);
 
-  // Listen for new messages
+  // Update the socket effect to include better read status handling
   useEffect(() => {
     if (!socket) return;
 
-    console.log(
-      `Setting up message listeners for conversation ${conversation.id}`
-    );
+    const handleMessagesRead = ({
+      userId,
+      conversationId,
+    }: {
+      userId: string;
+      conversationId: number;
+    }) => {
+      console.log(
+        `Messages read event: user=${userId}, conversation=${conversationId}`
+      );
 
-    const handleNewMessage = (msg: any) => {
+      if (conversationId === conversation.id && userId !== user?.id) {
+        console.log("Updating read status for messages");
+        setLocalMessages((prev) =>
+          prev.map((msg) =>
+            msg.senderId === user?.id ? { ...msg, read: true } : msg
+          )
+        );
+      }
+    };
+
+    const handleMessageReceived = (msg: any) => {
       console.log("Received message:", msg);
 
-      // Skip if the message isn't for this conversation
       if (msg.conversationId !== conversation.id) {
         console.log(
           `Message not for current conversation. Got: ${msg.conversationId}, Expected: ${conversation.id}`
@@ -292,174 +341,203 @@ export default function ConversationPage() {
       // Add to processed set
       processedMessageIds.current.add(messageWithDateObj.id);
 
-      // Check if this is a real message that corresponds to an optimistic one
-      // we already added (based on content and sender)
       setLocalMessages((prev) => {
-        // Look for any existing message with the same content from the same sender
-        const duplicateIndex = prev.findIndex(
+        // Look for any existing message with matching ID or content/sender
+        const existingIndex = prev.findIndex(
           (m) =>
-            m.content === messageWithDateObj.content &&
-            m.senderId === messageWithDateObj.senderId &&
-            m.conversationId === messageWithDateObj.conversationId
+            m.id === messageWithDateObj.id ||
+            (m.content === messageWithDateObj.content &&
+              m.senderId === messageWithDateObj.senderId &&
+              m.conversationId === messageWithDateObj.conversationId)
         );
 
-        if (duplicateIndex >= 0) {
-          console.log("Found duplicate message, replacing with server version");
+        if (existingIndex >= 0) {
           // Replace the optimistic message with the real one
           const newMessages = [...prev];
-          newMessages[duplicateIndex] = messageWithDateObj;
+          newMessages[existingIndex] = messageWithDateObj;
           return newMessages;
         }
 
-        // No duplicate found, add this as a new message
-        console.log("No duplicate found, adding new message to UI");
         return [...prev, messageWithDateObj];
       });
 
+      // Check if we should auto-scroll or show the scroll button
+      if (!isScrolledToBottom() && messageWithDateObj.senderId !== user?.id) {
+        setShowScrollToBottom(true);
+        setUnreadCount((prev) => prev + 1);
+      } else if (isAtBottom || messageWithDateObj.senderId === user?.id) {
+        // Auto-scroll if we're at bottom or the user sent the message
+        requestAnimationFrame(() => {
+          scrollToBottom();
+        });
+      }
+
       // Mark as read if the user is the receiver
       if (messageWithDateObj.receiverId === user?.id && connected) {
-        console.log("Marking incoming message as read");
         markAsRead(conversation.id);
       }
 
-      setIsTyping(false);
       return true;
     };
 
-    const handleMessagesRead = ({
-      userId,
-      conversationId,
-    }: {
-      userId: string;
-      conversationId: number;
-    }) => {
-      console.log(
-        `Messages read event: user=${userId}, conversation=${conversationId}`
-      );
-
-      if (conversationId === conversation.id && userId !== user?.id) {
-        console.log("Updating read status for messages");
-        // Update message read status
-        setLocalMessages((prev) =>
-          prev.map((msg) =>
-            msg.senderId === user?.id ? { ...msg, read: true } : msg
-          )
-        );
-      }
-    };
-
-    const handleTyping = ({
-      conversationId,
-      userId,
-    }: {
-      conversationId: number;
-      userId: string;
-    }) => {
-      console.log(
-        `Typing event: user=${userId}, conversation=${conversationId}`
-      );
-
-      if (conversationId === conversation.id && userId !== user?.id) {
-        setIsTyping(true);
-
-        // Clear typing indicator after 3 seconds
-        if (typingTimeout) clearTimeout(typingTimeout);
-        const timeout = setTimeout(() => setIsTyping(false), 3000);
-        setTypingTimeout(timeout);
-      }
-    };
-
-    // Register event handlers
-    socket.on("message_received", handleNewMessage);
-    socket.on("user_typing", handleTyping);
+    socket.on("message_received", handleMessageReceived);
     socket.on("messages_read", handleMessagesRead);
 
     return () => {
-      // Clean up event listeners
-      socket.off("message_received", handleNewMessage);
-      socket.off("user_typing", handleTyping);
+      socket.off("message_received", handleMessageReceived);
       socket.off("messages_read", handleMessagesRead);
-      if (typingTimeout) clearTimeout(typingTimeout);
     };
-  }, [socket, user?.id, conversation.id, connected, markAsRead, typingTimeout]);
+  }, [
+    socket,
+    user?.id,
+    conversation.id,
+    connected,
+    markAsRead,
+    isAtBottom,
+    scrollToBottom,
+    isScrolledToBottom,
+  ]);
 
-  // Scroll to bottom when new messages arrive
-  useEffect(() => {
-    // Only auto-scroll to bottom if user was already at the bottom
-    const container = messagesContainerRef.current;
-    if (container) {
-      const isAtBottom =
-        container.scrollHeight - container.scrollTop - container.clientHeight <
-        100;
-      if (isAtBottom) {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }
-    } else {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [localMessages, isTyping]);
-
-  // Handle scroll to load more messages
+  // Track scroll position to determine if user is at bottom
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
 
-    const handleScroll = async () => {
-      // Load more when scrolling to top (threshold of 50px)
-      if (container.scrollTop < 50 && hasMoreMessages && !isLoadingMore) {
-        // Save current scroll position
+    const handleScroll = () => {
+      const wasAtBottom = isAtBottom;
+      const nowAtBottom = isScrolledToBottom();
+
+      setIsAtBottom(nowAtBottom);
+
+      if (nowAtBottom && showScrollToBottom) {
+        setShowScrollToBottom(false);
+        setUnreadCount(0);
+      }
+
+      // Check if we're near the top to load more messages
+      if (
+        container.scrollTop < 100 &&
+        hasMoreMessages &&
+        !isLoadingMore &&
+        localMessages.length > 0
+      ) {
+        console.log("Near top of scroll, loading more messages");
+        // Save current scroll position and height
         lastScrollHeight.current = container.scrollHeight;
         lastScrollTop.current = container.scrollTop;
 
-        await loadMoreMessages();
+        loadMoreMessages();
       }
     };
 
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [hasMoreMessages, currentPage, isLoadingMore, conversation.id]);
+    // Add scroll event listener with throttling
+    let ticking = false;
+    const throttledScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
 
-  // After loading more messages, restore scroll position
-  useEffect(() => {
-    if (!isLoadingMore && messagesContainerRef.current) {
-      const container = messagesContainerRef.current;
-      const newScrollTop =
-        container.scrollHeight -
-        lastScrollHeight.current +
-        lastScrollTop.current;
-
-      // Set scroll position to maintain relative position after new content loads
-      container.scrollTop = newScrollTop;
-    }
-  }, [isLoadingMore, localMessages.length]);
+    container.addEventListener("scroll", throttledScroll);
+    return () => container.removeEventListener("scroll", throttledScroll);
+  }, [
+    hasMoreMessages,
+    isLoadingMore,
+    localMessages.length,
+    isAtBottom,
+    showScrollToBottom,
+    isScrolledToBottom,
+  ]);
 
   // Function to load older messages
   const loadMoreMessages = async () => {
-    if (!hasMoreMessages || isLoadingMore) return;
+    if (!hasMoreMessages || isLoadingMore || localMessages.length === 0) return;
 
     try {
       setIsLoadingMore(true);
-      const nextPage = currentPage + 1;
 
-      const response = await fetch(
-        `/dashboard/messages/${conversation.id}?page=${nextPage}`
+      // Get the oldest message ID we currently have as our cursor
+      const oldestMessage = [...localMessages].sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      )[0];
+
+      const oldestMessageId = oldestMessage.id;
+      const oldestMessageDate = new Date(oldestMessage.createdAt).toISOString();
+
+      console.log(
+        `Loading messages older than ID: ${oldestMessageId}, date: ${oldestMessageDate}`
       );
-      if (!response.ok) throw new Error("Failed to load more messages");
+
+      // Use POST to avoid URL length limitations and caching issues
+      const response = await fetch(`/api/messages/loadMore`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          conversationId: conversation.id,
+          beforeId: oldestMessageId,
+          beforeDate: oldestMessageDate,
+          limit: MESSAGES_PER_PAGE,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load more messages: ${response.status}`);
+      }
 
       const data = await response.json();
+      console.log("Loaded message data:", data);
 
-      // Add newly loaded messages to the top
+      if (!data.messages || data.messages.length === 0) {
+        console.log("No more messages to load");
+        setHasMoreMessages(false);
+        return;
+      }
+
+      // Process new messages
       const newMessages = data.messages;
-
-      // Update processed message IDs
       newMessages.forEach((msg: Message) => {
         processedMessageIds.current.add(msg.id);
       });
 
-      // Add new messages to the beginning of the array
-      setLocalMessages((prev) => [...newMessages, ...prev]);
-      setCurrentPage(nextPage);
+      // Update messages state while preserving order and avoiding duplicates
+      setLocalMessages((prev) => {
+        // Filter out any duplicates
+        const uniqueNewMessages = newMessages.filter(
+          (newMsg: Message) =>
+            !prev.some((existingMsg) => existingMsg.id === newMsg.id)
+        );
+
+        console.log(
+          `Adding ${uniqueNewMessages.length} new messages to existing ${prev.length} messages`
+        );
+
+        // Sort all messages by createdAt to ensure correct order
+        return [...uniqueNewMessages, ...prev].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
+
+      // Update if we potentially have more messages
       setHasMoreMessages(data.hasMore);
+
+      // Maintain scroll position after new messages are added
+      requestAnimationFrame(() => {
+        if (messagesContainerRef.current) {
+          const newScrollTop =
+            messagesContainerRef.current.scrollHeight -
+            lastScrollHeight.current +
+            lastScrollTop.current;
+          messagesContainerRef.current.scrollTop = newScrollTop;
+        }
+      });
     } catch (error) {
       console.error("Error loading more messages:", error);
     } finally {
@@ -575,6 +653,7 @@ export default function ConversationPage() {
     }
   };
 
+  // Function to handle send message
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !otherUser || !user || isSending) return;
@@ -603,8 +682,6 @@ export default function ConversationPage() {
         },
       };
 
-      console.log("Optimistic message:", optimisticMessage);
-
       // Add to processed set to prevent duplicates when the real message comes back
       processedMessageIds.current.add(tempId);
 
@@ -613,15 +690,20 @@ export default function ConversationPage() {
 
       // Clear input immediately for better UX
       setNewMessage("");
+
+      // Add new message to the end of the list
       setLocalMessages((prev) => [...prev, optimisticMessage]);
+
+      // Always scroll to bottom when sending a message
+      requestAnimationFrame(() => {
+        scrollToBottom();
+      });
 
       // Actually send the message
       await sendMessage(otherUser.identifier, messageContent, conversation.id);
       console.log("Message sent successfully through WebSocket");
     } catch (error) {
       console.error("Failed to send message:", error);
-      // You could add error handling here, like showing a notification
-      // or adding a "failed" indicator to the message
     } finally {
       setIsSending(false);
     }
@@ -758,15 +840,57 @@ export default function ConversationPage() {
     );
   }
 
-  // Group messages by date
-  const groupedMessages: { [date: string]: Message[] } = {};
-  localMessages.forEach((message) => {
-    const date = format(new Date(message.createdAt), "MMMM d, yyyy");
-    if (!groupedMessages[date]) {
-      groupedMessages[date] = [];
-    }
-    groupedMessages[date].push(message);
-  });
+  // Group messages by date, and consecutive messages by the same sender
+  const processedMessages = () => {
+    const result: {
+      [date: string]: {
+        groups: Array<{
+          senderId: string;
+          isFromMe: boolean;
+          profile: {
+            name: string | null;
+            pfpUrl: string | null;
+          };
+          messages: Message[];
+        }>;
+      };
+    } = {};
+
+    localMessages.forEach((message) => {
+      const date = format(new Date(message.createdAt), "MMMM d, yyyy");
+      const isFromMe = message.senderId === user?.id;
+
+      if (!result[date]) {
+        result[date] = { groups: [] };
+      }
+
+      const currentGroups = result[date].groups;
+      const lastGroup =
+        currentGroups.length > 0
+          ? currentGroups[currentGroups.length - 1]
+          : null;
+
+      // If the last message was from the same sender, add to that group
+      if (lastGroup && lastGroup.senderId === message.senderId) {
+        lastGroup.messages.push(message);
+      } else {
+        // Otherwise create a new group
+        currentGroups.push({
+          senderId: message.senderId,
+          isFromMe,
+          profile: {
+            name: message.sender.name,
+            pfpUrl: message.sender.pfpUrl,
+          },
+          messages: [message],
+        });
+      }
+    });
+
+    return result;
+  };
+
+  const messageDateGroups = processedMessages();
 
   return (
     <div className="h-full flex flex-col">
@@ -898,7 +1022,7 @@ export default function ConversationPage() {
       {/* Messages area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-3 md:p-4 space-y-1 custom-scrollbar bg-gradient-to-b from-[#0a0a0a] to-[#0f0f0f]"
+        className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4 custom-scrollbar bg-gradient-to-b from-[#0a0a0a] to-[#0f0f0f] relative"
       >
         {/* Loading indicator for more messages */}
         {isLoadingMore && (
@@ -922,186 +1046,277 @@ export default function ConversationPage() {
           </div>
         )}
 
-        {/* Messages by date */}
-        {Object.entries(groupedMessages).map(([date, msgs]) => (
-          <div key={date} className="mb-4 space-y-3">
-            <div className="flex items-center justify-center mb-2">
+        {/* Date separators and message groups */}
+        {Object.entries(messageDateGroups).map(([date, { groups }]) => (
+          <div key={date} className="mb-6">
+            <div className="flex items-center justify-center mb-4">
               <div className="bg-white/5 text-white/60 text-xs px-3 py-1 rounded-full backdrop-blur-sm">
                 {date}
               </div>
             </div>
-            {msgs.map((message, idx) => {
-              const isFromMe = message.senderId === user?.id;
-              const isConsecutive =
-                idx > 0 && msgs[idx - 1].senderId === message.senderId;
-              const isBeingEdited = editingMessage?.id === message.id;
 
-              return (
+            <div className="space-y-4">
+              {groups.map((group, groupIndex) => (
                 <div
-                  key={message.id}
-                  className={`flex animate-fadeIn ${
-                    isFromMe ? "justify-end" : "justify-start"
+                  key={`${date}-${groupIndex}`}
+                  className={`flex ${
+                    group.isFromMe ? "justify-end" : "justify-start"
                   }`}
                 >
+                  {/* Sender avatar - only for other people's messages */}
+                  {!group.isFromMe && (
+                    <div className="h-9 w-9 rounded-full overflow-hidden border border-white/10 mr-2 flex-shrink-0 self-end mb-1">
+                      <img
+                        src={
+                          group.profile.pfpUrl ||
+                          "https://via.placeholder.com/40"
+                        }
+                        alt={group.profile.name || "User"}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            "https://via.placeholder.com/40";
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Message group */}
                   <div
-                    className={`group flex max-w-[85%] md:max-w-[75%] ${
-                      isConsecutive && !isFromMe ? "pl-10" : ""
-                    }`}
+                    className={`flex flex-col ${
+                      group.isFromMe ? "items-end" : "items-start"
+                    } max-w-[75%] md:max-w-[65%] gap-[3px]`}
                   >
-                    {!isFromMe && !isConsecutive && (
-                      <div className="flex-shrink-0 mt-1">
-                        <div className="h-8 w-8 rounded-full overflow-hidden border border-white/10 bg-gray-800">
-                          <img
-                            src={
-                              message.sender.pfpUrl ||
-                              "https://via.placeholder.com/40"
-                            }
-                            alt={message.sender.name || "User"}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src =
-                                "https://via.placeholder.com/40";
-                            }}
-                          />
-                        </div>
+                    {/* Sender name - only for others' messages */}
+                    {!group.isFromMe && (
+                      <div className="text-xs text-white/70 ml-1 mb-0.5">
+                        {group.profile.name}
                       </div>
                     )}
-                    <div
-                      className={`${
-                        !isFromMe && !isConsecutive ? "ml-2" : ""
-                      } ${!isFromMe && isConsecutive ? "ml-0" : ""} relative`}
-                    >
-                      {/* Message Options Button (only for my messages) */}
-                      {isFromMe && !isBeingEdited && (
-                        <div className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <button
-                            onClick={() =>
-                              setMessageMenuOpen((prev) =>
-                                prev === message.id ? null : message.id
-                              )
-                            }
-                            className="p-1 bg-gray-800/70 hover:bg-gray-800 rounded-full backdrop-blur-sm text-white/70 hover:text-white transition-colors"
-                          >
-                            <MoreHorizontal className="h-3 w-3" />
-                          </button>
 
-                          {/* Message Menu */}
-                          {messageMenuOpen === message.id && (
-                            <div className="absolute right-0 mt-1 w-24 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 z-10 message-menu">
-                              <div className="py-1">
+                    {/* Message bubbles */}
+                    {group.messages.map((message, msgIndex) => {
+                      const isFirstInGroup = msgIndex === 0;
+                      const isLastInGroup =
+                        msgIndex === group.messages.length - 1;
+                      const isBeingEdited = editingMessage?.id === message.id;
+
+                      // Calculate bubble styling
+                      let bubbleStyle = "";
+
+                      // Base colors
+                      if (group.isFromMe) {
+                        bubbleStyle =
+                          "bg-gradient-to-r from-blue-600 to-blue-500 text-white";
+                      } else {
+                        bubbleStyle = "bg-[#1e1e1e] text-white";
+                      }
+
+                      // Shape for my messages
+                      if (group.isFromMe) {
+                        if (group.messages.length === 1) {
+                          bubbleStyle +=
+                            " rounded-tl-2xl rounded-bl-2xl rounded-tr-lg rounded-br-2xl";
+                        } else if (isFirstInGroup) {
+                          bubbleStyle +=
+                            " rounded-tl-2xl rounded-bl-lg rounded-tr-lg rounded-br-lg";
+                        } else if (isLastInGroup) {
+                          bubbleStyle +=
+                            " rounded-tl-lg rounded-bl-2xl rounded-tr-lg rounded-br-2xl";
+                        } else {
+                          bubbleStyle +=
+                            " rounded-tl-lg rounded-bl-lg rounded-tr-lg rounded-br-lg";
+                        }
+                      }
+                      // Shape for other's messages
+                      else {
+                        if (group.messages.length === 1) {
+                          bubbleStyle +=
+                            " rounded-tl-lg rounded-bl-2xl rounded-tr-2xl rounded-br-2xl";
+                        } else if (isFirstInGroup) {
+                          bubbleStyle +=
+                            " rounded-tl-lg rounded-bl-lg rounded-tr-2xl rounded-br-lg";
+                        } else if (isLastInGroup) {
+                          bubbleStyle +=
+                            " rounded-tl-lg rounded-bl-2xl rounded-tr-lg rounded-br-2xl";
+                        } else {
+                          bubbleStyle +=
+                            " rounded-tl-lg rounded-bl-lg rounded-tr-lg rounded-br-lg";
+                        }
+                      }
+
+                      return (
+                        <div
+                          key={message.id}
+                          className="group relative animate-fadeIn"
+                        >
+                          {/* Message Options Button (only for my messages) */}
+                          {group.isFromMe && !isBeingEdited && (
+                            <div className="absolute -left-8 top-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <button
+                                onClick={() =>
+                                  setMessageMenuOpen((prev) =>
+                                    prev === message.id ? null : message.id
+                                  )
+                                }
+                                className="p-1 bg-gray-800/70 hover:bg-gray-800 rounded-full backdrop-blur-sm text-white/70 hover:text-white transition-colors"
+                              >
+                                <MoreHorizontal className="h-3 w-3" />
+                              </button>
+
+                              {/* Message Menu */}
+                              {messageMenuOpen === message.id && (
+                                <div className="absolute left-0 mt-1 w-24 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 z-10 message-menu">
+                                  <div className="py-1">
+                                    <button
+                                      onClick={() => {
+                                        setEditingMessage(message);
+                                        setMessageMenuOpen(null);
+                                      }}
+                                      className="w-full flex items-center px-4 py-2 text-xs text-white hover:bg-gray-700 transition-colors"
+                                    >
+                                      <Edit className="h-3 w-3 mr-2" />
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteMessage(message.id)
+                                      }
+                                      className="w-full flex items-center px-4 py-2 text-xs text-red-400 hover:bg-gray-700 transition-colors"
+                                    >
+                                      <Trash className="h-3 w-3 mr-2" />
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Message Content */}
+                          {isBeingEdited ? (
+                            <div className="flex rounded-2xl overflow-hidden bg-gray-700/70 backdrop-blur-sm">
+                              <input
+                                ref={editInputRef}
+                                type="text"
+                                value={editingMessage.content}
+                                onChange={(e) =>
+                                  setEditingMessage({
+                                    ...editingMessage,
+                                    content: e.target.value,
+                                  })
+                                }
+                                className="flex-1 px-3 py-2 bg-transparent text-white text-sm outline-none"
+                                autoFocus
+                              />
+                              <div className="flex">
                                 <button
-                                  onClick={() => {
-                                    setEditingMessage(message);
-                                    setMessageMenuOpen(null);
-                                  }}
-                                  className="w-full flex items-center px-4 py-2 text-xs text-white hover:bg-gray-700 transition-colors"
+                                  onClick={handleEditMessage}
+                                  disabled={isEditing}
+                                  className="px-2 text-blue-400 hover:text-blue-300 transition-colors"
                                 >
-                                  <Edit className="h-3 w-3 mr-2" />
-                                  Edit
+                                  {isEditing ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Edit className="h-3 w-3" />
+                                  )}
                                 </button>
                                 <button
-                                  onClick={() =>
-                                    handleDeleteMessage(message.id)
-                                  }
-                                  className="w-full flex items-center px-4 py-2 text-xs text-red-400 hover:bg-gray-700 transition-colors"
+                                  onClick={() => setEditingMessage(null)}
+                                  className="px-2 text-red-400 hover:text-red-300 transition-colors"
                                 >
-                                  <Trash className="h-3 w-3 mr-2" />
-                                  Delete
+                                  ✕
                                 </button>
                               </div>
                             </div>
+                          ) : (
+                            <div
+                              className={`${bubbleStyle} px-3 py-2 shadow-sm hover:shadow-md transition-all duration-200`}
+                            >
+                              <p className="text-sm md:text-base whitespace-pre-wrap break-words">
+                                {message.content}
+                              </p>
+
+                              {/* Time stamp - Only show for last message in group */}
+                              {isLastInGroup && (
+                                <div
+                                  className={`flex ${
+                                    group.isFromMe
+                                      ? "justify-end"
+                                      : "justify-start"
+                                  } items-center mt-0.5`}
+                                >
+                                  <span className="text-[10px] text-white/60">
+                                    {format(
+                                      new Date(message.createdAt),
+                                      "h:mm a"
+                                    )}
+                                  </span>
+
+                                  {/* Read receipt - Only for my messages */}
+                                  {group.isFromMe && (
+                                    <span className="ml-1">
+                                      {message.read ? (
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="12"
+                                          height="12"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          className="text-green-400"
+                                        >
+                                          <path d="M20 6L9 17l-5-5"></path>
+                                          <path d="M14 6l-3.5 5"></path>
+                                        </svg>
+                                      ) : connected ? (
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="12"
+                                          height="12"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          className="text-white/60"
+                                        >
+                                          <path d="M20 6L9 17l-5-5"></path>
+                                          <path d="M14 6l-3.5 5"></path>
+                                        </svg>
+                                      ) : (
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="12"
+                                          height="12"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          className="text-white/60"
+                                        >
+                                          <path d="M20 6L9 17l-5-5"></path>
+                                        </svg>
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-
-                      {/* Message Content */}
-                      {isBeingEdited ? (
-                        <div className="mt-1 mb-1 flex rounded-2xl overflow-hidden bg-gray-700/70 backdrop-blur-sm">
-                          <input
-                            ref={editInputRef}
-                            type="text"
-                            value={editingMessage.content}
-                            onChange={(e) =>
-                              setEditingMessage({
-                                ...editingMessage,
-                                content: e.target.value,
-                              })
-                            }
-                            className="flex-1 px-3 py-2 bg-transparent text-white text-sm outline-none"
-                            autoFocus
-                          />
-                          <div className="flex">
-                            <button
-                              onClick={handleEditMessage}
-                              disabled={isEditing}
-                              className="px-2 text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                              {isEditing ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <Edit className="h-3 w-3" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => setEditingMessage(null)}
-                              className="px-2 text-red-400 hover:text-red-300 transition-colors"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div
-                            className={`px-3 py-2 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 ${
-                              isFromMe
-                                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-tr-none hover:shadow-blue-900/20"
-                                : "bg-[#1a1a1a] text-white rounded-tl-none hover:bg-[#222222]"
-                            } ${
-                              isConsecutive
-                                ? isFromMe
-                                  ? "rounded-tr-2xl"
-                                  : "rounded-tl-2xl"
-                                : ""
-                            }`}
-                          >
-                            <p className="text-sm md:text-base whitespace-pre-wrap break-words">
-                              {message.content}
-                            </p>
-                          </div>
-                          <div
-                            className={`text-xs mt-1 text-white/40 ${
-                              isFromMe ? "text-right" : "text-left"
-                            }`}
-                          >
-                            {format(new Date(message.createdAt), "h:mm a")}
-                            {isFromMe && (
-                              <span className="ml-1.5">
-                                {message.read ? (
-                                  <span className="inline-flex items-center">
-                                    •{" "}
-                                    <span className="text-blue-400 ml-1">
-                                      Read
-                                    </span>
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center">
-                                    •{" "}
-                                    <span className="text-white/40 ml-1">
-                                      Sent
-                                    </span>
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         ))}
 
@@ -1119,7 +1334,7 @@ export default function ConversationPage() {
                   }}
                 />
               </div>
-              <div className="px-4 py-2 bg-[#1a1a1a] text-white rounded-2xl rounded-tl-none shadow-sm">
+              <div className="px-4 py-2 bg-[#1e1e1e] text-white rounded-tl-lg rounded-tr-2xl rounded-bl-2xl rounded-br-2xl shadow-sm">
                 <div className="flex space-x-1 items-center">
                   <div className="h-2 w-2 bg-white/70 rounded-full animate-typing"></div>
                   <div
@@ -1133,6 +1348,35 @@ export default function ConversationPage() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Scroll to bottom button */}
+        {showScrollToBottom && (
+          <div className="absolute bottom-4 right-4 z-10 animate-fadeIn">
+            <button
+              onClick={() => scrollToBottom()}
+              className="flex items-center space-x-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-150 transform hover:scale-105"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span className="text-xs font-medium">
+                {unreadCount > 0
+                  ? `${unreadCount} new message${unreadCount > 1 ? "s" : ""}`
+                  : "Latest messages"}
+              </span>
+            </button>
           </div>
         )}
 

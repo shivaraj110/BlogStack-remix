@@ -30,6 +30,14 @@ type Friend = {
   createdAt: string;
 };
 
+type FriendData = {
+  id: string;
+  name: string | null;
+  pfpUrl: string | null;
+  email: any;
+  createdAt: string;
+};
+
 type FriendRequest = {
   id: number;
   senderId: string;
@@ -151,7 +159,12 @@ export const loader = async (args: LoaderFunctionArgs) => {
           id: friendData.identifier,
           name: friendData.name,
           pfpUrl: friendData.pfpUrl,
-          email: friendData.email,
+          email:
+            typeof friendData.email === "object" && friendData.email !== null
+              ? (friendData.email as any).emailAddress ||
+                (friendData.email as any).email ||
+                JSON.stringify(friendData.email)
+              : String(friendData.email || ""),
           createdAt: friendship.createdAt.toISOString(),
         };
       })
@@ -165,7 +178,13 @@ export const loader = async (args: LoaderFunctionArgs) => {
       senderId: request.senderId,
       senderName: request.sender.name,
       senderPfp: request.sender.pfpUrl,
-      senderEmail: request.sender.email,
+      senderEmail:
+        typeof request.sender.email === "object" &&
+        request.sender.email !== null
+          ? (request.sender.email as any).emailAddress ||
+            (request.sender.email as any).email ||
+            JSON.stringify(request.sender.email)
+          : String(request.sender.email || ""),
       createdAt: request.createdAt.toISOString(),
     }));
 
@@ -197,16 +216,17 @@ export default function FriendsPage() {
   // Filter friends based on search term
   const filteredFriends =
     data.friends
-      ?.filter((friend: Friend | null) => {
+      ?.filter((friend) => {
         if (!friend) return false;
         const friendName = friend.name?.toLowerCase() || "";
-        const friendEmail = friend.email.toLowerCase();
+        const friendEmail =
+          typeof friend.email === "string" ? friend.email.toLowerCase() : "";
         const searchLower = searchTerm.toLowerCase();
         return (
           friendName.includes(searchLower) || friendEmail.includes(searchLower)
         );
       })
-      .filter((friend): friend is Friend => friend !== null) || [];
+      .filter(Boolean) || [];
 
   console.log("Filtered friends:", filteredFriends);
 
@@ -305,46 +325,49 @@ export default function FriendsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {activeTab === "friends" &&
           (filteredFriends.length > 0 ? (
-            filteredFriends.map((friend) => (
-              <div
-                key={friend.id}
-                className="group bg-white/5 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20"
-              >
-                <div className="flex items-start space-x-4">
-                  <img
-                    src={friend.pfpUrl || "https://via.placeholder.com/60"}
-                    alt={friend.name || "User"}
-                    className="h-16 w-16 rounded-full border-2 border-white/10 group-hover:border-blue-500/50 transition-colors"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-lg group-hover:text-blue-400 transition-colors">
-                      {friend.name || "Anonymous User"}
-                    </h3>
-                    <p className="text-sm text-white/60">{friend.email}</p>
-                    <p className="text-xs text-white/40 mt-1">
-                      Friends since{" "}
-                      {format(new Date(friend.createdAt), "MMM d, yyyy")}
-                    </p>
+            filteredFriends.map(
+              (friend) =>
+                friend && (
+                  <div
+                    key={friend.id}
+                    className="group bg-white/5 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20"
+                  >
+                    <div className="flex items-start space-x-4">
+                      <img
+                        src={friend.pfpUrl || "https://via.placeholder.com/60"}
+                        alt={friend.name || "User"}
+                        className="h-16 w-16 rounded-full border-2 border-white/10 group-hover:border-blue-500/50 transition-colors"
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-medium text-lg group-hover:text-blue-400 transition-colors">
+                          {friend.name || "Anonymous User"}
+                        </h3>
+                        <p className="text-sm text-white/60">{friend.email}</p>
+                        <p className="text-xs text-white/40 mt-1">
+                          Friends since{" "}
+                          {format(new Date(friend.createdAt), "MMM d, yyyy")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center space-x-2">
+                      <Link
+                        to={`/dashboard/messages/new/${friend.id}`}
+                        className="flex-1 flex items-center justify-center space-x-2 bg-blue-500/20 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-500/30 transition-colors"
+                      >
+                        <MessageSquareText className="h-4 w-4" />
+                        <span>Message</span>
+                      </Link>
+                      <button
+                        onClick={() => handleRejectRequest(Number(friend.id))}
+                        className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                        title="Remove Friend"
+                      >
+                        <UserMinus className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className="mt-4 flex items-center space-x-2">
-                  <Link
-                    to={`/dashboard/messages/new/${friend.id}`}
-                    className="flex-1 flex items-center justify-center space-x-2 bg-blue-500/20 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-500/30 transition-colors"
-                  >
-                    <MessageSquareText className="h-4 w-4" />
-                    <span>Message</span>
-                  </Link>
-                  <button
-                    onClick={() => handleRejectRequest(Number(friend.id))}
-                    className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                    title="Remove Friend"
-                  >
-                    <UserMinus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))
+                )
+            )
           ) : (
             <div className="col-span-full flex flex-col items-center justify-center py-12 text-white/40">
               <Users className="h-12 w-12 mb-4" />
