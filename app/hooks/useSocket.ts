@@ -63,6 +63,9 @@ interface SocketHookResult {
     content: string,
     conversationId?: number
   ) => Promise<MessageResponse>;
+  sendRoomMessage: (roomName: string, message: string) => Promise<void>;
+  joinRoom: (roomName: string) => void;
+  leaveRoom: (roomName: string) => void;
   markAsRead: (conversationId: number) => void;
   sendTypingIndicator: (conversationId: number) => void;
   joinConversation: (conversationId: number) => void;
@@ -294,20 +297,63 @@ export function useSocket(): SocketHookResult {
     [socket, connected, user]
   );
 
-  // Mark messages as read
-  const markAsRead = useCallback(
-    (conversationId: number) => {
-      if (!socket || !connected || !user) {
-        console.error(
-          "Cannot mark as read: Socket not connected or user not signed in"
-        );
-        return;
+  // Send a room message
+  const sendRoomMessage = useCallback(
+    (roomName: string, message: string): Promise<void> => {
+      if (!socket || !connected) {
+        return Promise.reject(new Error("Socket not connected"));
       }
 
-      console.log(
-        `Marking messages as read in conversation ${conversationId} for user ${user.id}`
-      );
-      socket.emit("mark_as_read", { userId: user.id, conversationId });
+      return new Promise((resolve, reject) => {
+        try {
+          socket.emit("roomMessage", {
+            roomName,
+            message,
+            sender: socket.id,
+            timestamp: new Date(),
+          });
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    },
+    [socket, connected]
+  );
+
+  // Join a room
+  const joinRoom = useCallback(
+    (roomName: string) => {
+      if (socket && connected) {
+        socket.emit("joinRoom", roomName);
+      } else {
+        console.error("Cannot join room: Socket not connected");
+      }
+    },
+    [socket, connected]
+  );
+
+  // Leave a room
+  const leaveRoom = useCallback(
+    (roomName: string) => {
+      if (socket && connected) {
+        socket.emit("leaveRoom", roomName);
+      } else {
+        console.error("Cannot leave room: Socket not connected");
+      }
+    },
+    [socket, connected]
+  );
+
+  // Mark message as read
+  const markAsRead = useCallback(
+    (conversationId: number) => {
+      if (socket && connected && user) {
+        socket.emit("mark_read", {
+          userId: user.id,
+          conversationId,
+        });
+      }
     },
     [socket, connected, user]
   );
@@ -315,31 +361,22 @@ export function useSocket(): SocketHookResult {
   // Send typing indicator
   const sendTypingIndicator = useCallback(
     (conversationId: number) => {
-      if (!socket || !connected || !user) {
-        console.error(
-          "Cannot send typing indicator: Socket not connected or user not signed in"
-        );
-        return;
+      if (socket && connected && user) {
+        socket.emit("typing", {
+          conversationId,
+          userId: user.id,
+        });
       }
-
-      console.log(
-        `Sending typing indicator in conversation ${conversationId} for user ${user.id}`
-      );
-      socket.emit("typing", { conversationId, userId: user.id });
     },
     [socket, connected, user]
   );
 
-  // Join a specific conversation
+  // Join conversation (for real-time updates)
   const joinConversation = useCallback(
     (conversationId: number) => {
-      if (!socket || !connected) {
-        console.error("Cannot join conversation: Socket not connected");
-        return;
+      if (socket && connected) {
+        socket.emit("join_conversation", conversationId);
       }
-
-      console.log(`Joining conversation ${conversationId}`);
-      socket.emit("join_conversation", conversationId);
     },
     [socket, connected]
   );
@@ -349,6 +386,9 @@ export function useSocket(): SocketHookResult {
     connected,
     connecting,
     sendMessage,
+    sendRoomMessage,
+    joinRoom,
+    leaveRoom,
     markAsRead,
     sendTypingIndicator,
     joinConversation,

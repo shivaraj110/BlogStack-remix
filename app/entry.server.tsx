@@ -9,15 +9,15 @@ import type { AppLoadContext, EntryContext } from "@remix-run/node";
 import { createReadableStreamFromReadable } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
 import { renderToPipeableStream } from "react-dom/server";
-import { initSocketServer } from "./socket-server";
 import { createServer } from "node:http";
+import SocketService from "./services/socket-service";
 
 const ABORT_DELAY = 5_000;
 const SOCKET_PORT = 8081;
 const FALLBACK_PORTS = [8082, 8083, 8084, 8085]; // Fallback ports to try if main port is busy
 
 // Initialize Socket.IO server only in development mode
-export let io: Awaited<ReturnType<typeof initSocketServer>> | null = null;
+export let socketService: SocketService | null = null;
 // Export the socket port for client-side code to access
 export let activeSocketPort = SOCKET_PORT;
 
@@ -29,7 +29,8 @@ if (process.env.NODE_ENV === "development") {
     // Use async IIFE to handle async socket initialization
     (async () => {
       try {
-        io = await initSocketServer(httpServer);
+        socketService = new SocketService(httpServer);
+        socketService.initListeners();
         console.log("Socket.IO server initialized successfully");
 
         // Use port 8081 for the WebSocket server

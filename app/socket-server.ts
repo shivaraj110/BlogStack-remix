@@ -170,41 +170,40 @@ export async function initSocketServer(server: Server) {
   ) {
     console.log("Redis adapter configuration starting...");
     try {
-      // Build Redis URL from individual environment variables if they exist
-      let REDIS_URL;
-      if (process.env.REDIS_HOST) {
-        const host = process.env.REDIS_HOST;
-        const port = process.env.REDIS_PORT || "6379";
-        const username = process.env.REDIS_USERNAME || "";
-        const password = process.env.REDIS_PASSWORD || "";
-
-        if (username && password) {
-          REDIS_URL = `redis://${username}:${password}@${host}:${port}`;
-        } else if (password) {
-          REDIS_URL = `redis://:${password}@${host}:${port}`;
-        } else {
-          REDIS_URL = `redis://${host}:${port}`;
-        }
-      } else {
-        REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
-      }
+      // Redis configuration (similar to your original implementation)
+      const redisOptions = {
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT || "6379"),
+        username: process.env.REDIS_USERNAME,
+        password: process.env.REDIS_PASSWORD,
+        retryStrategy: (times: number) => {
+          const delay = Math.min(times * 50, 2000); // Retry with backoff
+          return delay;
+        },
+        maxRetriesPerRequest: 5,
+        connectTimeout: 10000,
+        tls: process.env.REDIS_TLS === "true" ? {} : undefined,
+      };
 
       console.log(
-        `Connecting to Redis at: ${REDIS_URL.replace(/:[^:]*@/, ":***@")}`
+        `Connecting to Redis at: ${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`
       );
       console.log(
         `Redis TLS enabled: ${process.env.REDIS_TLS === "true" ? "Yes" : "No"}`
       );
 
       // Create Redis clients for pub/sub using ioredis
-      const pubClient = new Redis(REDIS_URL, {
-        retryStrategy: (times: number) => Math.min(times * 50, 2000), // Retry with backoff
-        tls: process.env.REDIS_TLS === "true" ? {} : undefined, // Enable TLS if configured
-        maxRetriesPerRequest: 5,
-        connectTimeout: 10000,
+      const pubClient = new Redis(redisOptions);
+      const subClient = pubClient.duplicate();
+
+      // Handle Redis connection events
+      pubClient.on("connect", () => {
+        console.log("Redis pub client connected successfully");
       });
 
-      const subClient = pubClient.duplicate();
+      subClient.on("connect", () => {
+        console.log("Redis sub client connected successfully");
+      });
 
       // Handle Redis connection errors
       pubClient.on("error", (err: Error) => {
@@ -213,15 +212,6 @@ export async function initSocketServer(server: Server) {
 
       subClient.on("error", (err: Error) => {
         console.error("Redis sub client error:", err);
-      });
-
-      // Log successful connections
-      pubClient.on("connect", () => {
-        console.log("Redis pub client connected successfully");
-      });
-
-      subClient.on("connect", () => {
-        console.log("Redis sub client connected successfully");
       });
 
       // Apply Redis adapter to Socket.IO server
