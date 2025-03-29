@@ -284,6 +284,17 @@ export default function MessagesPage() {
     }
   }, [conversationId]);
 
+  // Automatically mark messages as read when conversation is loaded
+  useEffect(() => {
+    if (conversationId && socket && connected && user) {
+      // Tell the server to mark messages as read
+      socket.emit("mark_read", {
+        userId: user.id,
+        conversationId: parseInt(conversationId),
+      });
+    }
+  }, [conversationId, socket, connected, user]);
+
   // Filter conversations based on search term
   const filteredConversations = conversations.filter((convo) => {
     const participantName = convo.participants[0]?.name?.toLowerCase() || "";

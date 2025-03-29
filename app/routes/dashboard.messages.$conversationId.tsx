@@ -31,6 +31,10 @@ type Message = {
   conversationId: number;
   read: boolean;
   createdAt: string | Date;
+  contentType?: "text" | "image" | "file" | "emoji";
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
   sender: {
     name: string | null;
     pfpUrl: string | null;
@@ -236,11 +240,38 @@ export default function ConversationPage() {
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const isMobileView = typeof window !== "undefined" && window.innerWidth < 768;
+  const messageMenuRef = useRef<HTMLDivElement | null>(null);
 
   // Initialize or reset message tracking when conversation changes
   useEffect(() => {
     processedMessageIds.current = new Set(initialMessages.map((msg) => msg.id));
-    setLocalMessages(initialMessages);
+
+    // Process messages to ensure they have contentType
+    const processedMessages = initialMessages.map((msg) => {
+      // If message is from server and doesn't have contentType, try to detect it
+      if (!msg.contentType) {
+        // Check if it's likely an image (base64 image)
+        if (msg.content.startsWith("data:image/")) {
+          return { ...msg, contentType: "image" as const };
+        }
+        // Check if it's likely a file (base64 file)
+        else if (
+          msg.content.startsWith("data:application/") ||
+          msg.content.startsWith("data:text/") ||
+          msg.content.includes(";base64,")
+        ) {
+          return { ...msg, contentType: "file" as const };
+        }
+        // Default to text
+        return { ...msg, contentType: "text" as const };
+      }
+      return msg;
+    });
+
+    setLocalMessages(processedMessages);
     setHasMoreMessages(hasMore);
     setIsAtBottom(true);
     setShowScrollToBottom(false);
@@ -285,8 +316,27 @@ export default function ConversationPage() {
       // Also join the conversation-specific room
       socket.emit("join_conversation", conversation.id);
       console.log(`Joining room for conversation ${conversation.id}`);
+
+      // Set up a periodic timer to mark messages as read every 5 seconds
+      // This ensures messages get marked as read even if the user is just viewing
+      const readInterval = setInterval(() => {
+        if (document.visibilityState === "visible") {
+          markAsRead(conversation.id);
+        }
+      }, 5000);
+
+      return () => {
+        clearInterval(readInterval);
+      };
     }
   }, [conversation.id, connected, markAsRead, socket]);
+
+  // Mark messages as read when new messages are loaded
+  useEffect(() => {
+    if (conversation.id && connected && socket && localMessages.length > 0) {
+      markAsRead(conversation.id);
+    }
+  }, [localMessages, conversation.id, connected, markAsRead, socket]);
 
   // Update the socket effect to include better read status handling
   useEffect(() => {
@@ -323,10 +373,23 @@ export default function ConversationPage() {
         return false;
       }
 
+      // Extract metadata from the message if available
+      const metadata = msg.metadata || {};
+
       // Convert dates to Date objects for consistency
       const messageWithDateObj = {
         ...msg,
         createdAt: new Date(msg.createdAt),
+        // Set content type from metadata or detect from content
+        contentType: (metadata.contentType ||
+          (msg.content.startsWith("data:image/")
+            ? "image"
+            : msg.content.includes(";base64,")
+            ? "file"
+            : "text")) as "text" | "image" | "file" | "emoji",
+        fileName: metadata.fileName,
+        fileSize: metadata.fileSize,
+        mimeType: metadata.mimeType,
       };
 
       // Skip if already processed this message (by ID)
@@ -653,7 +716,141 @@ export default function ConversationPage() {
     }
   };
 
-  // Function to handle send message
+  // Function to handle file upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Limit file size to 10MB
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size must be less than 10MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (!event.target?.result || !otherUser || !user) return;
+
+      const base64Content = event.target.result as string;
+
+      handleSendSpecialMessage(
+        base64Content,
+        "file",
+        file.name,
+        file.size,
+        file.type
+      );
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ""; // Reset input
+  };
+
+  // Function to handle image upload
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check if file is an image
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    // Limit image size to 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size must be less than 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (!event.target?.result || !otherUser || !user) return;
+
+      const base64Image = event.target.result as string;
+
+      handleSendSpecialMessage(
+        base64Image,
+        "image",
+        file.name,
+        file.size,
+        file.type
+      );
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ""; // Reset input
+  };
+
+  // Function to send special message (image, file)
+  const handleSendSpecialMessage = async (
+    content: string,
+    contentType: "image" | "file",
+    fileName?: string,
+    fileSize?: number,
+    mimeType?: string
+  ) => {
+    if (!otherUser || !user || isSending) return;
+
+    try {
+      setIsSending(true);
+      console.log(
+        `Sending ${contentType} to ${otherUser.identifier} in conversation ${conversation.id}`
+      );
+
+      // Create a temporary optimistic ID
+      const tempId = Date.now();
+
+      // Optimistically add message to UI with temporary ID
+      const optimisticMessage: Message = {
+        id: tempId,
+        content,
+        contentType,
+        fileName,
+        fileSize,
+        mimeType,
+        senderId: user.id,
+        receiverId: otherUser.identifier,
+        conversationId: conversation.id,
+        read: false,
+        createdAt: new Date(),
+        sender: {
+          name: user.fullName || null,
+          pfpUrl: user.imageUrl || null,
+        },
+      };
+
+      // Add to processed set to prevent duplicates when the real message comes back
+      processedMessageIds.current.add(tempId);
+
+      // Add new message to the end of the list
+      setLocalMessages((prev) => [...prev, optimisticMessage]);
+
+      // Always scroll to bottom when sending a message
+      requestAnimationFrame(() => {
+        scrollToBottom();
+      });
+
+      // Actually send the message
+      const metadata = {
+        contentType,
+        fileName,
+        fileSize,
+        mimeType,
+      };
+      await sendMessage(
+        otherUser.identifier,
+        content,
+        conversation.id,
+        metadata
+      );
+      console.log(`${contentType} sent successfully through WebSocket`);
+    } catch (error) {
+      console.error(`Failed to send ${contentType}:`, error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // Replace the old handleSendMessage function with this updated one
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !otherUser || !user || isSending) return;
@@ -671,6 +868,7 @@ export default function ConversationPage() {
       const optimisticMessage: Message = {
         id: tempId,
         content: newMessage,
+        contentType: "text",
         senderId: user.id,
         receiverId: otherUser.identifier,
         conversationId: conversation.id,
@@ -700,7 +898,13 @@ export default function ConversationPage() {
       });
 
       // Actually send the message
-      await sendMessage(otherUser.identifier, messageContent, conversation.id);
+      const metadata = { contentType: "text" };
+      await sendMessage(
+        otherUser.identifier,
+        messageContent,
+        conversation.id,
+        metadata
+      );
       console.log("Message sent successfully through WebSocket");
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -892,8 +1096,73 @@ export default function ConversationPage() {
 
   const messageDateGroups = processedMessages();
 
+  // Function to render message content based on content type
+  const renderMessageContent = (message: Message) => {
+    switch (message.contentType) {
+      case "image":
+        return (
+          <div className="image-message">
+            <img
+              src={message.content}
+              alt="Image"
+              className="max-w-full rounded-lg max-h-80 object-contain"
+              onClick={() => window.open(message.content, "_blank")}
+            />
+            {message.fileName && (
+              <p className="text-xs text-white/60 mt-1">{message.fileName}</p>
+            )}
+          </div>
+        );
+      case "file":
+        return (
+          <div className="file-message flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mr-2"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <div>
+              <a
+                href={message.content}
+                download={message.fileName || "file"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-300 hover:text-blue-200 hover:underline"
+              >
+                {message.fileName || "Download file"}
+              </a>
+              {message.fileSize && (
+                <p className="text-xs text-white/60">
+                  {(message.fileSize / 1024).toFixed(0)} KB
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      default:
+        return (
+          <p className="text-sm md:text-base whitespace-pre-wrap break-words">
+            {message.content}
+          </p>
+        );
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col">
+    <div className="relative flex flex-col w-full h-screen md:h-full overflow-hidden bg-gray-900">
       {/* Conversation header */}
       <div className="p-3 md:p-4 border-b border-white/10 bg-gradient-to-r from-[#111111] to-[#0f0f0f] backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center justify-between">
@@ -1233,9 +1502,7 @@ export default function ConversationPage() {
                             <div
                               className={`${bubbleStyle} px-3 py-2 shadow-sm hover:shadow-md transition-all duration-200`}
                             >
-                              <p className="text-sm md:text-base whitespace-pre-wrap break-words">
-                                {message.content}
-                              </p>
+                              {renderMessageContent(message)}
 
                               {/* Time stamp - Only show for last message in group */}
                               {isLastInGroup && (
@@ -1388,50 +1655,76 @@ export default function ConversationPage() {
         {areFriends ? (
           <form onSubmit={handleSendMessage} className="flex items-center">
             <div className="hidden md:flex space-x-1 mr-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileChange}
+                className="hidden"
+              />
               <button
                 type="button"
+                onClick={() => fileInputRef.current?.click()}
                 className="p-2 rounded-full text-white/50 hover:text-white/80 hover:bg-white/5 transition-all transform hover:scale-105"
                 title="Attach file"
               >
                 <Paperclip className="h-5 w-5" />
               </button>
+
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
               <button
                 type="button"
+                onClick={() => imageInputRef.current?.click()}
                 className="p-2 rounded-full text-white/50 hover:text-white/80 hover:bg-white/5 transition-all transform hover:scale-105"
                 title="Send image"
               >
                 <Image className="h-5 w-5" />
               </button>
-              <button
-                type="button"
-                className="p-2 rounded-full text-white/50 hover:text-white/80 hover:bg-white/5 transition-all transform hover:scale-105"
-                title="Send emoji"
-              >
-                <Smile className="h-5 w-5" />
-              </button>
             </div>
 
             <div className="flex md:hidden mr-2">
-              <button
-                type="button"
-                className="p-2 rounded-full text-white/50 hover:text-white/80 hover:bg-white/5 transition-all"
-                title="Attachments"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5"
+              {/* Hidden file inputs for mobile */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="p-2 rounded-full text-white/50 hover:text-white/80 hover:bg-white/5 transition-all"
+                  title="Attach files"
                 >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="16"></line>
-                  <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-5 h-5"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div className="relative flex-1">

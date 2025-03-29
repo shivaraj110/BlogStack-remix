@@ -61,7 +61,8 @@ interface SocketHookResult {
   sendMessage: (
     receiverId: string,
     content: string,
-    conversationId?: number
+    conversationId?: number,
+    metadata?: any
   ) => Promise<MessageResponse>;
   sendRoomMessage: (roomName: string, message: string) => Promise<void>;
   joinRoom: (roomName: string) => void;
@@ -102,7 +103,7 @@ export function useSocket(): SocketHookResult {
     hasInitialized.current = true;
     setConnecting(true);
 
-    const SOCKET_URL = "https://blogstack-socketserver.onrender.com"
+    const SOCKET_URL = "https://blogstack-socketserver.onrender.com";
     console.log(`Attempting to connect to socket server at: ${SOCKET_URL}`);
 
     // If we have an existing socket, clean it up first
@@ -233,7 +234,8 @@ export function useSocket(): SocketHookResult {
     (
       receiverId: string,
       content: string,
-      conversationId?: number
+      conversationId?: number,
+      metadata?: any
     ): Promise<MessageResponse> => {
       if (!socket || !connected) {
         console.error("Cannot send message: Socket not connected");
@@ -252,7 +254,8 @@ export function useSocket(): SocketHookResult {
       }
 
       console.log(
-        `Sending message to ${receiverId}${conversationId ? ` in conversation ${conversationId}` : ""
+        `Sending message to ${receiverId}${
+          conversationId ? ` in conversation ${conversationId}` : ""
         }: ${content.substring(0, 20)}${content.length > 20 ? "..." : ""}`
       );
 
@@ -262,6 +265,7 @@ export function useSocket(): SocketHookResult {
           receiverId,
           content,
           conversationId,
+          metadata,
         };
 
         // Create a timeout for network issues
