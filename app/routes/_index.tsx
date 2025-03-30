@@ -23,7 +23,7 @@ export const loader: LoaderFunction = async (args) => {
             .create({
               data: {
                 identifier: user.id,
-                email: user.emailAddresses[0].toString(),
+                email: user.emailAddresses[0].emailAddress.toString(),
                 name: user.fullName,
                 pfpUrl: user.imageUrl,
                 fname: user.firstName,

@@ -104,6 +104,7 @@ export function useSocket(): SocketHookResult {
     setConnecting(true);
 
     const SOCKET_URL = "https://blogstack-socketserver.onrender.com";
+
     console.log(`Attempting to connect to socket server at: ${SOCKET_URL}`);
 
     // If we have an existing socket, clean it up first
@@ -254,8 +255,7 @@ export function useSocket(): SocketHookResult {
       }
 
       console.log(
-        `Sending message to ${receiverId}${
-          conversationId ? ` in conversation ${conversationId}` : ""
+        `Sending message to ${receiverId}${conversationId ? ` in conversation ${conversationId}` : ""
         }: ${content.substring(0, 20)}${content.length > 20 ? "..." : ""}`
       );
 
