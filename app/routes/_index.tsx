@@ -18,7 +18,8 @@ export const loader: LoaderFunction = async (args) => {
             identifier: user?.id.toString(),
           },
         });
-        if (!User?.email && user) {
+
+        if (!User?.id && user) {
           await prisma.user
             .create({
               data: {
@@ -33,6 +34,18 @@ export const loader: LoaderFunction = async (args) => {
             .finally(() => {
               redirect("/dashboard");
             });
+        }
+        //ensuring email in database
+
+        else {
+          await prisma.user.update({
+            where: {
+              identifier: user.id,
+            },
+            data: {
+              email: user.emailAddresses[0].emailAddress.toString(),
+            },
+          });
         }
         return redirect("/dashboard");
       }
