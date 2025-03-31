@@ -306,11 +306,10 @@ export default function DashboardPage() {
           <div className="flex justify-center items-center space-x-2 mt-6 md:mt-8">
             <Link
               to={`?page=${pagination.currentPage - 1}`}
-              className={`px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm font-medium transition-colors ${
-                pagination.hasPrevPage
+              className={`px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasPrevPage
                   ? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
                   : "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
-              }`}
+                }`}
               onClick={(e) => !pagination.hasPrevPage && e.preventDefault()}
             >
               Previous
@@ -320,11 +319,10 @@ export default function DashboardPage() {
             </span>
             <Link
               to={`?page=${pagination.currentPage + 1}`}
-              className={`px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm font-medium transition-colors ${
-                pagination.hasNextPage
+              className={`px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasNextPage
                   ? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
                   : "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
-              }`}
+                }`}
               onClick={(e) => !pagination.hasNextPage && e.preventDefault()}
             >
               Next
