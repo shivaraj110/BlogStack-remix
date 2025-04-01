@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import PublicNavbar from "~/components/PublicNavbar";
 import PublicFooter from "~/components/PublicFooter";
 import { useUser } from "@clerk/remix";
+import { json } from "@remix-run/node";
 
 export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   const id = Number(args.params["id"]);
@@ -91,18 +92,51 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
       },
     });
 
-    return {
+    // Create a truncated description from the content
+    const description = blog?.content
+      ? blog.content.replace(/<[^>]*>/g, "").slice(0, 160) + "..."
+      : "";
+
+    return json({
       status: "success",
       body: {
         blog,
         relatedPosts,
       },
-    };
+      meta: {
+        title: blog?.title || "Blog Post",
+        description,
+        image: blog?.imgUrl || "",
+        author: blog?.author.name || "",
+        publishDate: blog?.publishDate || "",
+      },
+    });
   } catch (e) {
-    return {
+    return json({
       status: "failure",
-    };
+    });
   }
+};
+
+export const meta = ({ data }: { data: any }) => {
+  if (!data?.meta) return [];
+
+  const { title, description, image, author, publishDate } = data.meta;
+
+  return [
+    { title: `${title} | BlogStack` },
+    { name: "description", content: description },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    { property: "og:image", content: image },
+    { property: "og:type", content: "article" },
+    { property: "article:author", content: author },
+    { property: "article:published_time", content: publishDate },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description },
+    { name: "twitter:image", content: image },
+  ];
 };
 
 const PublicBlog = () => {
