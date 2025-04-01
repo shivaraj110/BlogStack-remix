@@ -16,13 +16,38 @@ import { rootAuthLoader } from "@clerk/remix/ssr.server";
 import { ClerkApp } from "@clerk/remix";
 import { clerkEnv } from "./env.server";
 import { useEffect, useState } from "react";
-import { isbot } from "isbot";
+
+// Simple function to check if a user agent string likely belongs to a bot
+function isBotUserAgent(userAgent: string): boolean {
+  const botPatterns = [
+    /bot/i,
+    /crawler/i,
+    /spider/i,
+    /googlebot/i,
+    /bingbot/i,
+    /yahoo/i,
+    /baidu/i,
+    /facebookexternalhit/i,
+    /twitterbot/i,
+    /slurp/i,
+    /lighthouse/i,
+    /chrome-lighthouse/i,
+    /headless/i,
+    /scraper/i,
+    /curl/i,
+    /wget/i,
+    /selenium/i,
+    /puppeteer/i,
+    /playwright/i,
+  ];
+
+  return botPatterns.some((pattern) => pattern.test(userAgent));
+}
 
 export const loader = (args: LoaderFunctionArgs) => {
-  // Check if the request is from a bot/crawler
   const userAgent = args.request.headers.get("user-agent") || "";
-  if (isbot(userAgent)) {
-    // Return a simple response for bots without authentication
+
+  if (isBotUserAgent(userAgent)) {
     return new Response(null, {
       status: 200,
       headers: {
@@ -31,11 +56,10 @@ export const loader = (args: LoaderFunctionArgs) => {
     });
   }
 
-  // For regular users, use the normal Clerk auth loader
   return rootAuthLoader(args, clerkEnv);
 };
 
-function App() {
+function AppComponent() {
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(false);
 
@@ -80,4 +104,8 @@ function App() {
   );
 }
 
-export default ClerkApp(App);
+// Create the wrapped app as a separate constant
+const App = ClerkApp(AppComponent);
+
+// Export the wrapped app as the default export
+export default App;
