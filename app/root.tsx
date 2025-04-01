@@ -16,8 +16,22 @@ import { rootAuthLoader } from "@clerk/remix/ssr.server";
 import { ClerkApp } from "@clerk/remix";
 import { clerkEnv } from "./env.server";
 import { useEffect, useState } from "react";
+import { isbot } from "isbot";
 
 export const loader = (args: LoaderFunctionArgs) => {
+  // Check if the request is from a bot/crawler
+  const userAgent = args.request.headers.get("user-agent") || "";
+  if (isbot(userAgent)) {
+    // Return a simple response for bots without authentication
+    return new Response(null, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html",
+      },
+    });
+  }
+
+  // For regular users, use the normal Clerk auth loader
   return rootAuthLoader(args, clerkEnv);
 };
 
