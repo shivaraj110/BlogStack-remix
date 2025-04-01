@@ -1,12 +1,14 @@
 export interface BookmarkedBlogData {
 	post: {
 		authorName: string;
+		author: {
+			name: string;
+		};
 		title: string;
 		authorId: number;
 		content: string;
 		publishDate: string;
 		comments: [];
-		views: number;
 		tags: string[];
 		views: number[];
 		likes: number[];

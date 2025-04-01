@@ -50,7 +50,7 @@ export default function() {
           key={b.post.id}
           imgUrl={b.post.imgUrl}
           authorImgUrl={b.post.authorImgUrl}
-          authorName={b.post.authorName || "Anonymous"}
+          authorName={b.post.author.name || "Anonymous"}
           title={b.post.title}
           content={b.post.content}
           tags={!b.post.tags ? ["notags"] : b.post.tags}
