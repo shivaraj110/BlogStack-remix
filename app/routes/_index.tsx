@@ -18,12 +18,24 @@ export const loader: LoaderFunction = async (args) => {
             identifier: user?.id.toString(),
           },
         });
-        if (!User?.email && user) {
+
+        if (User?.id) {
+          await prisma.user.update({
+            where: {
+              identifier: user.id,
+            },
+            data: {
+              email: user.emailAddresses[0].emailAddress.toString(),
+            },
+          });
+        }
+
+        if (!User?.id && user) {
           await prisma.user
             .create({
               data: {
                 identifier: user.id,
-                email: user.emailAddresses[0].toString(),
+                email: user.emailAddresses[0].emailAddress.toString(),
                 name: user.fullName,
                 pfpUrl: user.imageUrl,
                 fname: user.firstName,
@@ -34,6 +46,8 @@ export const loader: LoaderFunction = async (args) => {
               redirect("/dashboard");
             });
         }
+        //ensuring email in database
+
         return redirect("/dashboard");
       }
     }
