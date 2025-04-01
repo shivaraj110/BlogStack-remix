@@ -67,39 +67,36 @@ export const loader: LoaderFunction = async (args) => {
         }
 
         if (!User?.id && user) {
-          await prisma.user
-            .create({
-              data: {
-                identifier: user.id,
-                email: user.emailAddresses[0].emailAddress.toString(),
-                name: user.fullName,
-                pfpUrl: user.imageUrl,
-                fname: user.firstName,
-                lname: user.lastName,
-              },
-            })
-            .finally(() => {
-              redirect("/dashboard");
-            });
+          await prisma.user.create({
+            data: {
+              identifier: user.id,
+              email: user.emailAddresses[0].emailAddress.toString(),
+              name: user.fullName,
+              pfpUrl: user.imageUrl,
+              fname: user.firstName,
+              lname: user.lastName,
+            },
+          });
         }
-        //ensuring email in database
-
-        return redirect("/dashboard");
       }
     }
   } catch (e) {
     console.error("error :(  " + e);
   }
-  return redirect("/blog");
+  return null;
 };
+
 function Landing() {
   return (
     <div>
       <SignedOut>
         <LandingComp />
       </SignedOut>
-      <SignedIn></SignedIn>
+      <SignedIn>
+        <LandingComp />
+      </SignedIn>
     </div>
   );
 }
+
 export default Landing;
