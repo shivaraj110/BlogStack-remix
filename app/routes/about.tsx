@@ -1,6 +1,42 @@
 import { Link } from "@remix-run/react";
 import PublicNavbar from "~/components/PublicNavbar";
 import PublicFooter from "~/components/PublicFooter";
+import type { MetaFunction } from "@remix-run/node";
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "About BlogStack - Our Story and Mission" },
+    {
+      name: "description",
+      content:
+        "Learn about BlogStack's mission to provide a modern blogging platform for writers and readers. Discover our story, values, and commitment to the blogging community.",
+    },
+    {
+      property: "og:title",
+      content: "About BlogStack - Our Story and Mission",
+    },
+    {
+      property: "og:description",
+      content:
+        "Learn about BlogStack's mission to provide a modern blogging platform for writers and readers. Discover our story, values, and commitment to the blogging community.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:image", content: "/logo.png" },
+    { property: "og:image:width", content: "256" },
+    { property: "og:image:height", content: "256" },
+    { name: "twitter:card", content: "summary_large_image" },
+    {
+      name: "twitter:title",
+      content: "About BlogStack - Our Story and Mission",
+    },
+    {
+      name: "twitter:description",
+      content:
+        "Learn about BlogStack's mission to provide a modern blogging platform for writers and readers. Discover our story, values, and commitment to the blogging community.",
+    },
+    { name: "twitter:image", content: "/logo.png" },
+  ];
+};
 
 export default function About() {
   return (

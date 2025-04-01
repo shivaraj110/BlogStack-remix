@@ -4,6 +4,42 @@ import { LoaderFunction, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { createClerkClient } from "@clerk/remix/api.server";
 import { prisma } from "~/.server/db";
+import type { MetaFunction } from "@remix-run/node";
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "BlogStack - Your Personal Blogging Platform" },
+    {
+      name: "description",
+      content:
+        "Create, share, and discover amazing blog posts with BlogStack. Join our community of writers and readers.",
+    },
+    {
+      property: "og:title",
+      content: "BlogStack - Your Personal Blogging Platform",
+    },
+    {
+      property: "og:description",
+      content:
+        "Create, share, and discover amazing blog posts with BlogStack. Join our community of writers and readers.",
+    },
+    { property: "og:type", content: "website" },
+    { property: "og:image", content: "/logo.png" },
+    { property: "og:image:width", content: "256" },
+    { property: "og:image:height", content: "256" },
+    { name: "twitter:card", content: "summary_large_image" },
+    {
+      name: "twitter:title",
+      content: "BlogStack - Your Personal Blogging Platform",
+    },
+    {
+      name: "twitter:description",
+      content:
+        "Create, share, and discover amazing blog posts with BlogStack. Join our community of writers and readers.",
+    },
+    { name: "twitter:image", content: "/logo.png" },
+  ];
+};
 
 export const loader: LoaderFunction = async (args) => {
   try {
