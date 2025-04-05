@@ -1,4 +1,3 @@
-import { SignedIn, SignedOut } from "@clerk/remix";
 import { LoaderFunction, LoaderFunctionArgs, json } from "@remix-run/node";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { createClerkClient } from "@clerk/remix/api.server";
@@ -161,17 +160,17 @@ export default function Landing() {
                 Create, share, and discover amazing blog posts. Join our
                 community of writers and readers.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center ">
                 <Link
-                  to="/blog"
-                  className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  to={"/blog"}
+                  className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors z-10"
                 >
                   Explore Blogs
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
                 <Link
-                  to="/dashboard"
-                  className="inline-flex items-center px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg transition-colors"
+                  to={"/dashboard"}
+                  className="inline-flex items-center px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg transition-colors z-10"
                 >
                   Start Writing
                 </Link>
