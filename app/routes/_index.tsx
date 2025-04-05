@@ -16,7 +16,7 @@ import PublicFooter from "~/components/PublicFooter";
 import type { Post, User } from "@prisma/client";
 
 interface PostWithAuthor extends Post {
-  author: {
+  a32uthor: {
     name: string | null;
     pfpUrl: string | null;
   };

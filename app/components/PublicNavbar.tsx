@@ -49,6 +49,12 @@ export default function PublicNavbar() {
               >
                 Business
               </Link>
+              <Link
+                to="/team"
+                className="text-white/80 hover:text-white border-transparent hover:border-white/80 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                Team
+              </Link>
             </div>
           </div>
           <div className="hidden md:ml-6 md:flex md:items-center">
@@ -175,6 +181,13 @@ export default function PublicNavbar() {
             onClick={() => setIsMenuOpen(false)}
           >
             Business
+          </Link>
+          <Link
+            to="/team"
+            className="text-white block pl-3 pr-4 py-2 border-l-4 border-transparent hover:bg-white/5 hover:border-white/50"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Team
           </Link>
         </div>
         <div className="pt-4 pb-3 border-t border-white/10">
