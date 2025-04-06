@@ -5,34 +5,40 @@ const Team = () => {
   return (
     <div className="flex-col">
       <PublicNavbar />
+      <h1 className="m-5 flex justify-center font-semibold text-2xl">
+        Our Team
+      </h1>
+
       <div className="flex:col sm:flex space-x-10 p-10 justify-center">
         <TeamMember
-          name="krishDiddy"
-          bio="big dick energy"
-          contributions={69}
-          location="your mamas bathroom"
-          email="krish@pornhub.com"
+          commits={25}
+          name="itsKrish01"
+          bio="Software developer"
+          contributions={684}
+          location="India"
+          email=""
           pfpUrl="https://avatars.githubusercontent.com/u/72066631?v=4"
           badges={[
-            { type: "codewright", color: "blue" },
+            { type: "yolo", color: "blue" },
             { type: "developer", color: "green" },
           ]}
-          x="x.com/pervertKrish"
-          repos={69}
+          x="x.com"
+          repos={46}
         />
         <TeamMember
-          name="krishDiddy"
-          bio="big dick energy"
-          contributions={69}
-          location="your mamas bathroom"
-          email="krish@pornhub.com"
-          pfpUrl="https://avatars.githubusercontent.com/u/72066631?v=4"
+          name="shivaraj110"
+          bio="nvim btw"
+          commits={65}
+          contributions={657}
+          location="Earth"
+          email="shivarajchandaragi9@gmail.com"
+          pfpUrl="https://avatars.githubusercontent.com/u/175675300?v=4"
           badges={[
-            { type: "codewright", color: "blue" },
+            { type: "yolo", color: "blue" },
             { type: "developer", color: "green" },
           ]}
-          x="x.com/pervertKrish"
-          repos={69}
+          x="https://x.com/shivaraj_does"
+          repos={31}
         />
       </div>
       <PublicFooter />

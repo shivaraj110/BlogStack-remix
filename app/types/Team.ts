@@ -1,6 +1,7 @@
 export interface Profile {
   name: string;
   bio: string;
+  commits: number;
   contributions: number;
   location: string;
   email: string;
