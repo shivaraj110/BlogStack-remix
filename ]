@@ -1,10 +1,19 @@
 import { Link } from "@remix-run/react";
-import { Github, MapPin } from "lucide-react";
+import {
+  Axe,
+  CodeXml,
+  Flame,
+  Github,
+  GitMerge,
+  GitPullRequest,
+  MapPin,
+  Twitter,
+} from "lucide-react";
 import { Profile } from "~/types/Team";
 const TeamMember = (profile: Profile) => {
   return (
     <div className="flex-col bg-gradient-to-r from-black/70 to-black/100 max-w-[350px]  transition-all duration-200 justify-center text-center text-sm  p-[8px] rounded-[24px] items-center m-5">
-      <div className="bg-gradient-to-tr from-white/5 via-white/20 to-white/5  backdrop-brightness-75 backdrop-blur-sm p-7 rounded-[16px] ">
+      <div className="bg-gradient-to-tr from-white/5 via-white/15 to-white/5  backdrop-brightness-150 backdrop-blur-sm p-7 rounded-[16px] ">
         <div className="flex justify-center">
           <img
             src={profile.pfpUrl}
@@ -12,12 +21,12 @@ const TeamMember = (profile: Profile) => {
           />
         </div>
 
-        <h4 className="text-2xl font-light p-2">{profile.name}</h4>
-        <div className="flex text-yellow-600 justify-center items-center space-x-2">
+        <h4 className="text-2xl font-mono font-semibold p-2">{profile.name}</h4>
+        <div className="flex text-lime-600 justify-center items-center space-x-2">
           <MapPin size={15} />
           <p>{profile.location}</p>
         </div>
-        <div className="text-gray-300  p-2 font-light">
+        <div className="text-gray-300  p-2 font-mono">
           <p>{profile.bio}</p>
           <p>{profile.repos + " repos"}</p>
           <p>{profile.contributions + " contributions"}</p>

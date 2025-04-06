@@ -8,7 +8,6 @@ export interface Profile {
   x?: string;
   badges: {
     type: string;
-    color: string;
   }[];
   pfpUrl: string;
   repos: number;

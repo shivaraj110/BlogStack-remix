@@ -18,10 +18,7 @@ const Team = () => {
           location="India"
           email=""
           pfpUrl="https://avatars.githubusercontent.com/u/72066631?v=4"
-          badges={[
-            { type: "yolo", color: "blue" },
-            { type: "developer", color: "green" },
-          ]}
+          badges={[{ type: "yolo" }, { type: "developer" }]}
           x="x.com"
           repos={46}
         />
@@ -33,10 +30,7 @@ const Team = () => {
           location="Earth"
           email="shivarajchandaragi9@gmail.com"
           pfpUrl="https://avatars.githubusercontent.com/u/175675300?v=4"
-          badges={[
-            { type: "yolo", color: "blue" },
-            { type: "developer", color: "green" },
-          ]}
+          badges={[{ type: "yolo" }, { type: "developer" }]}
           x="https://x.com/shivaraj_does"
           repos={31}
         />
