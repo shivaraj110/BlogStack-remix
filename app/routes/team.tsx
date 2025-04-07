@@ -9,7 +9,7 @@ const Team = () => {
         Our Team
       </h1>
 
-      <div className="flex:col sm:flex space-x-10 p-10 justify-center">
+      <div className="flex:col sm:flex  p-10 justify-center">
         <TeamMember
           commits={25}
           name="itsKrish01"
