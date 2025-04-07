@@ -5,11 +5,9 @@ const Team = () => {
   return (
     <div className="flex-col">
       <PublicNavbar />
-      <h1 className="m-5 flex justify-center font-semibold text-2xl">
-        Our Team
-      </h1>
+      <h1 className=" flex justify-center font-semibold text-2xl">Our Team</h1>
 
-      <div className="flex:col sm:flex  p-10 justify-center">
+      <div className="sm:flex  sm:p-10 p-5 justify-center">
         <TeamMember
           commits={25}
           name="itsKrish01"
