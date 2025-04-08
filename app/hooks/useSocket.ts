@@ -134,7 +134,7 @@ export function useSocket(): SocketHookResult {
 
       socketInstance.on("user_status", (userId: string, status: boolean) => {
         if (status) {
-          setConnectedUsers([...connectedUsers, userId]);
+          setConnectedUsers(prevUsers => [...prevUsers, userId]);
         }
       });
       setConnected(true);
