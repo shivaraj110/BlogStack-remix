@@ -132,11 +132,6 @@ export function useSocket(): SocketHookResult {
     socketInstance.on("connect", () => {
       console.log("Socket connected with ID:", socketInstance.id);
 
-      socketInstance.on("user_status", (userId: string, status: boolean) => {
-        if (status) {
-          setConnectedUsers(prevUsers => [...prevUsers, userId]);
-        }
-      });
       setConnected(true);
       setConnecting(false);
       connectionAttempts.current = 0;
@@ -330,6 +325,13 @@ export function useSocket(): SocketHookResult {
     },
     [socket, connected]
   );
+
+  socket?.on("user_status", (userId: string, status: boolean) => {
+    if (status) {
+      setConnectedUsers(prevUsers => [...prevUsers, userId]);
+    }
+  });
+
 
   // Join a room
   const joinRoom = useCallback(
