@@ -72,6 +72,7 @@ interface SocketHookResult {
   sendTypingIndicator: (conversationId: number) => void;
   joinConversation: (conversationId: number) => void;
   reconnect: () => void;
+  setStatus: (userId: string, status: string) => void;
 }
 
 /**
@@ -241,6 +242,9 @@ export function useSocket(): SocketHookResult {
   }, [socket, isSignedIn, user]);
 
   // Send a private message
+
+
+
   const sendMessage = useCallback(
     (
       receiverId: string,
@@ -384,6 +388,13 @@ export function useSocket(): SocketHookResult {
     [socket, connected, user]
   );
 
+  //set user status 
+  const setStatus = useCallback((userId: string, status: string) => {
+    if (socket) {
+      socket.emit("user_status", { userId, status });
+    }
+  }, []);
+
   // Join conversation (for real-time updates)
   const joinConversation = useCallback(
     (conversationId: number) => {
@@ -407,5 +418,6 @@ export function useSocket(): SocketHookResult {
     joinConversation,
     reconnect,
     connectedUsers,
+    setStatus,
   };
 }

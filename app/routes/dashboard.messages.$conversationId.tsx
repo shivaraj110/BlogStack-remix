@@ -215,7 +215,7 @@ export default function ConversationPage() {
   } = useLoaderData<typeof loader>();
   const { user } = useUser();
   const [isOnline, setIsonline] = useState<boolean>(false)
-  const { socket, connected, sendMessage, markAsRead, connectedUsers } = useSocket();
+  const { socket, connected, sendMessage, markAsRead, connectedUsers, setStatus } = useSocket();
   const [newMessage, setNewMessage] = useState("");
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [messageMenuOpen, setMessageMenuOpen] = useState<number | null>(null);
@@ -253,6 +253,12 @@ export default function ConversationPage() {
   useEffect(() => {
     const isUserOnline = connectedUsers.includes(otherUser.identifier);
     setIsonline(isUserOnline);
+    setStatus(user?.id ?? "", "online")
+
+    return () => {
+      setStatus(user?.id ?? "", "offline")
+    }
+
   }, [connectedUsers, otherUser.identifier]);
 
   // Initialize or reset message tracking when conversation changes
