@@ -40,7 +40,7 @@ export default function PublicFooter() {
                 <span className="sr-only">Instagram</span>
               </a>
               <a
-                href="#"
+                href="https://github.com/BlogStack110"
                 className="text-white/60 hover:text-white transition-colors"
               >
                 <Github size={20} />

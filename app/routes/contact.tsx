@@ -99,8 +99,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="text-lg font-medium mb-1">Email</h3>
-                    <p className="text-white/70">support@blogstack.com</p>
-                    <p className="text-white/70">info@blogstack.com</p>
+                    <p className="text-white/70">blogstack.site@gmail.com</p>
                   </div>
                 </div>
 
@@ -110,8 +109,8 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="text-lg font-medium mb-1">Phone</h3>
-                    <p className="text-white/70">+1 (555) 123-4567</p>
-                    <p className="text-white/70">Mon-Fri, 9AM-5PM EST</p>
+                    <p className="text-white/70">+91 8088337698</p>
+                    <p className="text-white/70">Mon-Fri, 9AM-5PM IST</p>
                   </div>
                 </div>
 
@@ -245,7 +244,7 @@ export default function Contact() {
                           value={formState.name}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-white/50"
-                          placeholder="John Doe"
+                          placeholder="Roronao Zoro"
                         />
                       </div>
                       <div>
@@ -263,7 +262,7 @@ export default function Contact() {
                           value={formState.email}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-white/50"
-                          placeholder="john@example.com"
+                          placeholder="you@example.com"
                         />
                       </div>
                     </div>
