@@ -249,14 +249,11 @@ export default function ConversationPage() {
 
   //get user status
 
-  useEffect(() => {
-    connectedUsers.map(u => {
-      if (u === otherUser.identifier) {
-        setIsonline(true);
-      }
-    })
-  }, [connectedUsers])
 
+  useEffect(() => {
+    const isUserOnline = connectedUsers.includes(otherUser.identifier);
+    setIsonline(isUserOnline);
+  }, [connectedUsers, otherUser.identifier]);
 
   // Initialize or reset message tracking when conversation changes
   useEffect(() => {
