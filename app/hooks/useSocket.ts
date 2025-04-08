@@ -131,6 +131,14 @@ export function useSocket(): SocketHookResult {
     // Set up event listeners
     socketInstance.on("connect", () => {
       console.log("Socket connected with ID:", socketInstance.id);
+      socketInstance.on(
+        "user_status",
+        (data: { userId: string; status: string }) => {
+          if (data.status === "online") {
+            setConnectedUsers((prevUsers) => [...prevUsers, data.userId]);
+          }
+        }
+      );
 
       setConnected(true);
       setConnecting(false);
@@ -325,13 +333,6 @@ export function useSocket(): SocketHookResult {
     },
     [socket, connected]
   );
-
-  socket?.on("user_status", (data: { userId: string, status: string }) => {
-    if (data.status === "online") {
-      setConnectedUsers(prevUsers => [...prevUsers, data.userId]);
-    }
-  });
-
 
   // Join a room
   const joinRoom = useCallback(
