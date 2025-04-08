@@ -326,9 +326,9 @@ export function useSocket(): SocketHookResult {
     [socket, connected]
   );
 
-  socket?.on("user_status", (userId: string, status: boolean) => {
-    if (status) {
-      setConnectedUsers(prevUsers => [...prevUsers, userId]);
+  socket?.on("user_status", (data: { userId: string, status: string }) => {
+    if (data.status === "online") {
+      setConnectedUsers(prevUsers => [...prevUsers, data.userId]);
     }
   });
 
