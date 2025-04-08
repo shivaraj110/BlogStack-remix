@@ -214,7 +214,8 @@ export default function ConversationPage() {
     areFriends,
   } = useLoaderData<typeof loader>();
   const { user } = useUser();
-  const { socket, connected, sendMessage, markAsRead } = useSocket();
+  const [isOnline, setIsonline] = useState<boolean>(false)
+  const { socket, connected, sendMessage, markAsRead, connectedUsers } = useSocket();
   const [newMessage, setNewMessage] = useState("");
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [messageMenuOpen, setMessageMenuOpen] = useState<number | null>(null);
@@ -244,6 +245,18 @@ export default function ConversationPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const isMobileView = typeof window !== "undefined" && window.innerWidth < 768;
   const messageMenuRef = useRef<HTMLDivElement | null>(null);
+
+
+  //get user status
+
+  useEffect(() => {
+    connectedUsers.map(u => {
+      if (u === otherUser.identifier) {
+        setIsonline(true);
+      }
+    })
+  }, [connectedUsers])
+
 
   // Initialize or reset message tracking when conversation changes
   useEffect(() => {
@@ -385,8 +398,8 @@ export default function ConversationPage() {
           (msg.content.startsWith("data:image/")
             ? "image"
             : msg.content.includes(";base64,")
-            ? "file"
-            : "text")) as "text" | "image" | "file" | "emoji",
+              ? "file"
+              : "text")) as "text" | "image" | "file" | "emoji",
         fileName: metadata.fileName,
         fileSize: metadata.fileSize,
         mimeType: metadata.mimeType,
@@ -1179,9 +1192,8 @@ export default function ConversationPage() {
                 />
               </div>
               <div
-                className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#111111] ${
-                  connected ? "bg-green-500" : "bg-gray-500"
-                } transition-colors duration-300`}
+                className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#111111] ${isOnline ? "bg-green-500" : "bg-gray-500"
+                  } transition-colors duration-300`}
               ></div>
             </div>
             <div>
@@ -1220,11 +1232,10 @@ export default function ConversationPage() {
               </div>
               <p className="text-xs md:text-sm text-white/60 flex items-center">
                 <span
-                  className={`inline-block mr-1.5 h-1.5 w-1.5 rounded-full ${
-                    connected ? "bg-green-500" : "bg-gray-500"
-                  } transition-colors duration-300`}
+                  className={`inline-block mr-1.5 h-1.5 w-1.5 rounded-full ${isOnline ? "bg-green-500" : "bg-gray-500"
+                    } transition-colors duration-300`}
                 ></span>
-                {connected ? "Online" : "Offline"}
+                {isOnline ? "Online" : "Offline"}
               </p>
             </div>
           </div>
@@ -1328,9 +1339,8 @@ export default function ConversationPage() {
               {groups.map((group, groupIndex) => (
                 <div
                   key={`${date}-${groupIndex}`}
-                  className={`flex ${
-                    group.isFromMe ? "justify-end" : "justify-start"
-                  }`}
+                  className={`flex ${group.isFromMe ? "justify-end" : "justify-start"
+                    }`}
                 >
                   {/* Sender avatar - only for other people's messages */}
                   {!group.isFromMe && (
@@ -1352,9 +1362,8 @@ export default function ConversationPage() {
 
                   {/* Message group */}
                   <div
-                    className={`flex flex-col ${
-                      group.isFromMe ? "items-end" : "items-start"
-                    } max-w-[75%] md:max-w-[65%] gap-[3px]`}
+                    className={`flex flex-col ${group.isFromMe ? "items-end" : "items-start"
+                      } max-w-[75%] md:max-w-[65%] gap-[3px]`}
                   >
                     {/* Sender name - only for others' messages */}
                     {!group.isFromMe && (
@@ -1507,11 +1516,10 @@ export default function ConversationPage() {
                               {/* Time stamp - Only show for last message in group */}
                               {isLastInGroup && (
                                 <div
-                                  className={`flex ${
-                                    group.isFromMe
-                                      ? "justify-end"
-                                      : "justify-start"
-                                  } items-center mt-0.5`}
+                                  className={`flex ${group.isFromMe
+                                    ? "justify-end"
+                                    : "justify-start"
+                                    } items-center mt-0.5`}
                                 >
                                   <span className="text-[10px] text-white/60">
                                     {format(

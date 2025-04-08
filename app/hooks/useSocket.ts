@@ -58,6 +58,7 @@ interface SocketHookResult {
   socket: Socket | null;
   connected: boolean;
   connecting: boolean;
+  connectedUsers: string[];
   sendMessage: (
     receiverId: string,
     content: string,
@@ -85,7 +86,7 @@ export function useSocket(): SocketHookResult {
   const hasInitialized = useRef(false);
   const maxReconnectionAttempts = 5;
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
-
+  const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
   // Initialize and manage socket connection
   useEffect(() => {
     // Return early if user isn't signed in
@@ -130,6 +131,12 @@ export function useSocket(): SocketHookResult {
     // Set up event listeners
     socketInstance.on("connect", () => {
       console.log("Socket connected with ID:", socketInstance.id);
+
+      socketInstance.on("user_status", (userId: string, status: boolean) => {
+        if (status) {
+          setConnectedUsers([...connectedUsers, userId]);
+        }
+      });
       setConnected(true);
       setConnecting(false);
       connectionAttempts.current = 0;
@@ -396,5 +403,6 @@ export function useSocket(): SocketHookResult {
     sendTypingIndicator,
     joinConversation,
     reconnect,
+    connectedUsers,
   };
 }
