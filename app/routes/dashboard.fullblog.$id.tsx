@@ -2,6 +2,7 @@ import { useUser } from "@clerk/remix";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { LoaderFunction, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Link, useFetcher, useLoaderData, useNavigate } from "@remix-run/react";
+import { Redis } from "@upstash/redis";
 import {
   ArrowLeft,
   Bookmark,
@@ -22,6 +23,7 @@ import { useEffect, useState } from "react";
 import { getBookmarks } from "~/.server/bookmark";
 import { prisma } from "~/.server/db";
 import { getLikes } from "~/.server/likes";
+import { getRedisConfig } from "~/lib/url";
 
 // Add new interfaces for our comment types
 interface CommentUser {
@@ -59,9 +61,14 @@ interface FetcherResponse {
 export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   const { userId } = (await getAuth(args)) ?? "";
   const id = Number(args.params["id"]);
-
+  const redis = new Redis(getRedisConfig())
   try {
-    const blog = await prisma.post.findUnique({
+    let blog;
+    blog = await redis.get(JSON.stringify({ blogId: id }))
+    if (blog)
+      blog = JSON.stringify(blog)
+
+    blog = await prisma.post.findUnique({
       where: {
         id: Number(args.params.id),
       },
@@ -678,8 +685,8 @@ const FullBlog = () => {
                     >
                       <Heart
                         className={`h-4 sm:h-5 sm:w-5 ${isLiked
-                            ? "fill-current text-red-500"
-                            : "text-white/70 group-hover:text-red-500"
+                          ? "fill-current text-red-500"
+                          : "text-white/70 group-hover:text-red-500"
                           } transition-colors duration-200`}
                       />
                       <span
@@ -710,8 +717,8 @@ const FullBlog = () => {
                     >
                       <Bookmark
                         className={`h-4 sm:h-5 sm:w-5 ${isBookmarked
-                            ? "fill-current text-blue-500"
-                            : "text-white/70 group-hover:text-blue-500"
+                          ? "fill-current text-blue-500"
+                          : "text-white/70 group-hover:text-blue-500"
                           } transition-colors duration-200`}
                       />
                       <span
@@ -810,8 +817,8 @@ const FullBlog = () => {
                           onClick={handleCommentSubmit}
                           disabled={!comment}
                           className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full ${comment
-                              ? "text-blue-500 hover:bg-white/5"
-                              : "text-white/30"
+                            ? "text-blue-500 hover:bg-white/5"
+                            : "text-white/30"
                             } transition-colors`}
                         >
                           <SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
