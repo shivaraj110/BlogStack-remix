@@ -65,40 +65,44 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   try {
     let blog;
     blog = await redis.get(JSON.stringify({ blogId: id }))
-    if (blog)
+    if (blog) {
       blog = JSON.stringify(blog)
-
-    blog = await prisma.post.findUnique({
-      where: {
-        id: Number(args.params.id),
-      },
-      include: {
-        author: {
-          select: {
-            name: true,
-            pfpUrl: true,
-            email: true,
-            identifier: true,
-            openToCollab: true,
-          },
+    }
+    else {
+      blog = await prisma.post.findUnique({
+        where: {
+          id: Number(args.params.id),
         },
-        likes: true,
-        views: true,
-        comments: {
-          orderBy: {
-            commentedAt: "desc",
+        include: {
+          author: {
+            select: {
+              name: true,
+              pfpUrl: true,
+              email: true,
+              identifier: true,
+              openToCollab: true,
+            },
           },
-          include: {
-            user: true,
-            replies: {
-              include: {
-                user: true,
+          likes: true,
+          views: true,
+          comments: {
+            orderBy: {
+              commentedAt: "desc",
+            },
+            include: {
+              user: true,
+              replies: {
+                include: {
+                  user: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
+      await redis.set(JSON.stringify({ blogId: blog?.id }), JSON.stringify(blog))
+    }
+
 
     // Get related posts
     const relatedPosts = await prisma.post.findMany({
