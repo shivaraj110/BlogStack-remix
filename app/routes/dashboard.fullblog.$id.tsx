@@ -66,7 +66,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
     let blog;
     blog = await redis.get(JSON.stringify({ blogId: id }))
     if (blog) {
-      blog = JSON.stringify(blog)
+      blog = JSON.parse(blog)
     }
     else {
       blog = await prisma.post.findUnique({
