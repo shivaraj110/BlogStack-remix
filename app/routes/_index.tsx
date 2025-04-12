@@ -4,6 +4,7 @@ import { createClerkClient } from "@clerk/remix/api.server";
 import { prisma } from "~/.server/db";
 import type { MetaFunction } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
+import { Redis } from '@upstash/redis'
 import {
   ArrowRight,
   Calendar,
@@ -13,10 +14,10 @@ import {
 } from "lucide-react";
 import PublicNavbar from "~/components/PublicNavbar";
 import PublicFooter from "~/components/PublicFooter";
-import type { Post, User } from "@prisma/client";
+import type { Post } from "@prisma/client";
 
 interface PostWithAuthor extends Post {
-  a32uthor: {
+  author: {
     name: string | null;
     pfpUrl: string | null;
   };
@@ -62,6 +63,18 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+const getRedisConfig = () => {
+  if (process.env.REDIS_URL && process.env.REDIS_TOKEN) {
+    return {
+      url: process.env.REDIS_URL,
+      token: process.env.REDIS_TOKEN
+    }
+  }
+  else {
+    throw new Error("REDIS CREDENTIALS NOT FOUND!");
+  }
+}
+const redis = new Redis(getRedisConfig())
 export const loader: LoaderFunction = async (args) => {
   try {
     const { userId } = await getAuth(args);
@@ -77,7 +90,7 @@ export const loader: LoaderFunction = async (args) => {
         });
 
         if (User?.id) {
-          await prisma.user.update({
+          const updatedUser = await prisma.user.update({
             where: {
               identifier: user.id,
             },
@@ -85,10 +98,12 @@ export const loader: LoaderFunction = async (args) => {
               email: user.emailAddresses[0].emailAddress.toString(),
             },
           });
+          await redis.del(String(user.id))
+          await redis.set(String(updatedUser.identifier), JSON.stringify(updatedUser))
         }
 
         if (!User?.id && user) {
-          await prisma.user.create({
+          const newUser = await prisma.user.create({
             data: {
               identifier: user.id,
               email: user.emailAddresses[0].emailAddress.toString(),
@@ -98,6 +113,7 @@ export const loader: LoaderFunction = async (args) => {
               lname: user.lastName,
             },
           });
+          await redis.set(String(newUser.identifier), JSON.stringify(newUser))
         }
       }
     }
