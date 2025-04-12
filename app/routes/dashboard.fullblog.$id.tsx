@@ -64,9 +64,12 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   const redis = new Redis(getRedisConfig())
   try {
     let blog;
-    blog = await redis.get(JSON.stringify({ blogId: id }))
-    if (blog) {
-      blog = JSON.parse(blog)
+    const cacheKey = `blog:${id}`
+    const cachedBlog = await redis.get(cacheKey)
+    if (cachedBlog) {
+      blog = JSON.parse(JSON.stringify(cachedBlog))
+      console.log("fetched cached blog!!!");
+
     }
     else {
       blog = await prisma.post.findUnique({
@@ -100,7 +103,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
           },
         },
       });
-      await redis.set(JSON.stringify({ blogId: blog?.id }), JSON.stringify(blog))
+      await redis.set(cacheKey, JSON.stringify(blog))
     }
 
 
