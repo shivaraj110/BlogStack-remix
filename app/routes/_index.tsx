@@ -15,6 +15,7 @@ import {
 import PublicNavbar from "~/components/PublicNavbar";
 import PublicFooter from "~/components/PublicFooter";
 import type { Post } from "@prisma/client";
+import { getRedisConfig } from "~/lib/url";
 
 interface PostWithAuthor extends Post {
   author: {
@@ -63,17 +64,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-const getRedisConfig = () => {
-  if (process.env.REDIS_URL && process.env.REDIS_TOKEN) {
-    return {
-      url: process.env.REDIS_URL,
-      token: process.env.REDIS_TOKEN
-    }
-  }
-  else {
-    throw new Error("REDIS CREDENTIALS NOT FOUND!");
-  }
-}
+
 const redis = new Redis(getRedisConfig())
 export const loader: LoaderFunction = async (args) => {
   try {
