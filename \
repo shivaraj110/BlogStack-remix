@@ -30,7 +30,6 @@ export const pushBlogs = async ({
                 authorId,
                 imgUrl,
                 publishDate,
-                published: true,
                 tags,
                 authorImgUrl,
             },
