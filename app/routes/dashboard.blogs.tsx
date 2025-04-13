@@ -1,7 +1,5 @@
-import { getAuth } from "@clerk/remix/ssr.server";
 import { LoaderFunctionArgs, json } from "@remix-run/node";
 import { useLoaderData, Link, useSearchParams } from "@remix-run/react";
-import { format } from "date-fns";
 import { prisma } from "~/.server/db";
 import { Plus, Search, Filter, Bookmark } from "lucide-react";
 import type { Post, User, Prisma } from "@prisma/client";

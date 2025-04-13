@@ -50,6 +50,6 @@ export const action = async (args: ActionFunctionArgs) => {
     };
   }
   return {
-    status: "sucsess",
+    status: "success",
   };
 };

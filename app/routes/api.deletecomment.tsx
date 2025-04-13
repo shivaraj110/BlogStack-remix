@@ -1,6 +1,8 @@
 import { getAuth } from "@clerk/remix/ssr.server";
 import { ActionFunction, json } from "@remix-run/node";
+import { Redis } from "@upstash/redis";
 import { prisma } from "~/.server/db";
+import { getRedisConfig } from "~/lib/url";
 
 export const action: ActionFunction = async (args) => {
   const { userId } = await getAuth(args);
@@ -11,10 +13,11 @@ export const action: ActionFunction = async (args) => {
 
   const formData = await args.request.formData();
   const commentId = Number(formData.get("commentId"));
-
+  const postId = Number(formData.get("postId"));
   if (!commentId) {
     return json({ error: "Missing comment ID" }, { status: 400 });
   }
+  const redis = new Redis(getRedisConfig());
 
   // Verify the comment belongs to the user
   const existingComment = await prisma.comment.findUnique({
@@ -42,7 +45,7 @@ export const action: ActionFunction = async (args) => {
   await prisma.comment.delete({
     where: { id: commentId },
   });
-
+  await redis.del(`blog:${postId}`);
   return json({
     status: "success",
     message: "Comment deleted successfully",

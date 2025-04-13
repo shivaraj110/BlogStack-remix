@@ -233,7 +233,6 @@ const FullBlog = () => {
     });
     return val;
   };
-
   const { user } = useUser();
   const [isLiked, setIsLiked] = useState<boolean>(Liked());
   const [comment, setComment] = useState<string>("");
@@ -246,6 +245,8 @@ const FullBlog = () => {
   const deleteFetcher = useFetcher<FetcherResponse>();
   const replyFetcher = useFetcher<FetcherResponse>();
   const editFetcher = useFetcher<FetcherResponse>();
+  const likeFetcher = useFetcher();
+  const [likeCount, setLikeCount] = useState<number>(blog.likes.length);
   useEffect(() => {
     setIsLiked(Liked());
     setIsBookmarked(BookMarked());
@@ -267,6 +268,31 @@ const FullBlog = () => {
       day: "numeric",
     };
     return new Date(dateString).toLocaleDateString("en-US", options);
+  };
+
+  const toggleLike = () => {
+    if (!user) return;
+
+    if (isLiked) {
+      likeFetcher.submit(
+        {
+          postId: blog.id.toString(),
+          userId: user.id,
+        },
+        { method: "delete", action: "/api/removelike" }
+      );
+      setLikeCount((prev) => Math.max(0, prev - 1));
+    } else {
+      likeFetcher.submit(
+        {
+          postId: blog.id.toString(),
+          userId: user.id,
+        },
+        { method: "post", action: "/api/addlike" }
+      );
+      setLikeCount((prev) => prev + 1);
+    }
+    setIsLiked(!isLiked);
   };
 
   // Function to share the blog post
@@ -305,7 +331,10 @@ const FullBlog = () => {
       )
     ) {
       deleteFetcher.submit(
-        { commentId: commentId.toString() },
+        {
+          postId: blog.id,
+          commentId: commentId.toString(),
+        },
         { method: "post", action: "/api/deletecomment" }
       );
     }
@@ -332,6 +361,7 @@ const FullBlog = () => {
 
     editFetcher.submit(
       {
+        postId: blog.id.toString(),
         commentId: commentId.toString(),
         comment: editText,
       },
@@ -352,7 +382,7 @@ const FullBlog = () => {
     try {
       replyFetcher.submit(
         {
-          commentId: parentId.toString(),
+          postId: blog.id.toString(),
           content: replyText,
           parentReplyId: parentReplyId?.toString(),
         } as any,
@@ -635,7 +665,7 @@ const FullBlog = () => {
             </div>
             <div className="text-white/70 flex items-center text-xs sm:text-sm">
               <Heart className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-              <span>{blog.likes.length} likes</span>
+              <span>{likeCount} likes</span>
             </div>
             <div className="text-white/70 flex items-center text-xs sm:text-sm">
               <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
@@ -675,16 +705,10 @@ const FullBlog = () => {
               {/* Action Bar */}
               <div className="border-t border-white/10 px-4 sm:px-6 md:px-8 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-4">
                 <div className="flex items-center space-x-4">
-                  <fetcher.Form
-                    className="flex"
-                    method={isLiked ? "DELETE" : "POST"}
-                    action={isLiked ? "/api/removelike" : "/api/addlike"}
-                  >
-                    <input type="hidden" name="postId" value={blog.id} />
-                    <input type="hidden" name="userId" value={user?.id ?? ""} />
+                  <div className="flex">
                     <button
                       type="submit"
-                      onClick={() => setIsLiked(!isLiked)}
+                      onClick={toggleLike}
                       className="flex items-center space-x-1 group"
                     >
                       <Heart
@@ -697,10 +721,10 @@ const FullBlog = () => {
                         className={`text-xs sm:text-sm ${isLiked ? "text-red-500" : "text-white/70"
                           }`}
                       >
-                        {blog.likes.length}
+                        {likeCount}
                       </span>
                     </button>
-                  </fetcher.Form>
+                  </div>
 
                   <fetcher.Form
                     className="flex"

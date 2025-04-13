@@ -1,6 +1,8 @@
 import { getAuth } from "@clerk/remix/ssr.server";
 import { ActionFunction, json } from "@remix-run/node";
+import { Redis } from "@upstash/redis";
 import { prisma } from "~/.server/db";
+import { getRedisConfig } from "~/lib/url";
 
 export const action: ActionFunction = async (args) => {
   const { userId } = await getAuth(args);
@@ -12,6 +14,10 @@ export const action: ActionFunction = async (args) => {
   const formData = await args.request.formData();
   const commentId = Number(formData.get("commentId"));
   const content = formData.get("content")?.toString();
+  const postId = Number(formData.get("postId"));
+  const redis = new Redis(getRedisConfig());
+  await redis.del(`blog:${postId}`);
+  console.log("deleted chache" + postId);
 
   if (!commentId || !content) {
     return json({ error: "Missing required fields" }, { status: 400 });
