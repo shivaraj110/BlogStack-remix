@@ -17,8 +17,7 @@ export const action: ActionFunction = async (args) => {
   const postId = Number(formData.get("postId"));
   const redis = new Redis(getRedisConfig());
   await redis.del(`blog:${postId}`);
-  console.log("deleted chache" + postId);
-
+  console.log("deleted chache ", postId);
   if (!commentId || !content) {
     return json({ error: "Missing required fields" }, { status: 400 });
   }

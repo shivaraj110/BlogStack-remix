@@ -346,6 +346,7 @@ const FullBlog = () => {
 
     replyFetcher.submit(
       {
+        postId: blog.id,
         commentId: commentId.toString(),
         content: replyText,
       },
@@ -372,6 +373,7 @@ const FullBlog = () => {
   };
 
   // Function to add a reply
+  // Function to add a reply
   const addReply = async (
     parentId: number,
     replyText: string,
@@ -382,7 +384,8 @@ const FullBlog = () => {
     try {
       replyFetcher.submit(
         {
-          postId: blog.id.toString(),
+          postId: blog.id,
+          commentId: parentId.toString(), // Make sure this is the comment ID
           content: replyText,
           parentReplyId: parentReplyId?.toString(),
         } as any,
@@ -403,17 +406,34 @@ const FullBlog = () => {
           pfpUrl: user?.imageUrl || "",
           identifier: user?.id || "",
         },
-        replies: [],
-        parentId: parentReplyId,
       };
 
+      // Update comments state with the new reply
       setComments((prevComments) => {
         return prevComments.map((comment) => {
           if (comment.id === parentId) {
-            return {
-              ...comment,
-              replies: [newReply, ...comment.replies],
-            };
+            // If replying directly to a comment
+            if (!parentReplyId) {
+              return {
+                ...comment,
+                replies: [newReply, ...comment.replies],
+              };
+            }
+            // If replying to a reply, we need to find that reply
+            else {
+              return {
+                ...comment,
+                replies: comment.replies.map((reply) => {
+                  if (reply.id === parentReplyId) {
+                    return {
+                      ...reply,
+                      replies: [...(reply.replies || []), newReply],
+                    };
+                  }
+                  return reply;
+                }),
+              };
+            }
           }
           return comment;
         });
