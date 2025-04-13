@@ -63,6 +63,15 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   const id = Number(args.params["id"]);
   const redis = new Redis(getRedisConfig());
   try {
+    //update views
+
+    await prisma.view.create({
+      data: {
+        userId: userId?.toString() ?? "",
+        postId: id,
+      },
+    });
+
     let blog;
     const cacheKey = `blog:${id}`;
     const cachedBlog = await redis.get(cacheKey);
@@ -131,24 +140,6 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
         },
       },
     });
-
-    //update views
-    const isViewed = await prisma.view.findFirst({
-      where: {
-        userId: userId?.toString() ?? "",
-
-        postId: id,
-      },
-    });
-
-    if (!isViewed?.id) {
-      await prisma.view.create({
-        data: {
-          userId: userId?.toString() ?? "",
-          postId: id,
-        },
-      });
-    }
 
     const bookmarks = await getBookmarks(userId ?? "");
     const Likes = await getLikes(userId ?? "");

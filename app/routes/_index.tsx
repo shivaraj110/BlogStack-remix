@@ -4,7 +4,7 @@ import { createClerkClient } from "@clerk/remix/api.server";
 import { prisma } from "~/.server/db";
 import type { MetaFunction } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
-import { Redis } from '@upstash/redis'
+import { Redis } from "@upstash/redis";
 import {
   ArrowRight,
   Calendar,
@@ -64,8 +64,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-
-const redis = new Redis(getRedisConfig())
+const redis = new Redis(getRedisConfig());
 export const loader: LoaderFunction = async (args) => {
   try {
     const { userId } = await getAuth(args);
@@ -89,8 +88,11 @@ export const loader: LoaderFunction = async (args) => {
               email: user.emailAddresses[0].emailAddress.toString(),
             },
           });
-          await redis.del(String(user.id))
-          await redis.set(String(updatedUser.identifier), JSON.stringify(updatedUser))
+          await redis.del(`user:${user.id}`);
+          await redis.set(
+            `user:${updatedUser.identifier}`,
+            JSON.stringify(updatedUser)
+          );
         }
 
         if (!User?.id && user) {
@@ -104,7 +106,10 @@ export const loader: LoaderFunction = async (args) => {
               lname: user.lastName,
             },
           });
-          await redis.set(String(newUser.identifier), JSON.stringify(newUser))
+          await redis.set(
+            `user:${newUser.identifier}`,
+            JSON.stringify(newUser)
+          );
         }
       }
     }
