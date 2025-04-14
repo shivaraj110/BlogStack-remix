@@ -114,7 +114,9 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
         },
       });
       await redis.set(cacheKey, JSON.stringify(blog));
+      await redis.expire(cacheKey, 60 * 60);
       await redis.setnx(`blog:${blog?.id}:views`, blog?.views.length);
+      await redis.expire(`blog:${blog?.id}:views`, 15 * 60)
     }
 
     // Get chached related posts
@@ -122,35 +124,39 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
     const cachedRelatedPosts = await redis.get(`relatedPosts:${blog.id}`);
     if (cachedRelatedPosts) {
       relatedPosts = JSON.parse(JSON.stringify(cachedRelatedPosts));
-      await redis.expire(`relatedPosts:${relatedPosts.id}`, 60 * 60);
-    }
-    relatedPosts = await prisma.post.findMany({
-      where: {
-        id: {
-          not: id,
-        },
-        tags: {
-          hasSome: blog?.tags || [],
-        },
-      },
-      take: 3,
-      select: {
-        id: true,
-        title: true,
-        imgUrl: true,
-        publishDate: true,
-        authorImgUrl: true,
-        likes: true,
-        views: true,
-        tags: true,
-        author: {
-          select: {
-            name: true,
+      await redis.expire(`relatedPosts:${blog.id}`, 60 * 60);
+    } else {
+      relatedPosts = await prisma.post.findMany({
+        where: {
+          id: {
+            not: id,
+          },
+          tags: {
+            hasSome: blog?.tags || [],
           },
         },
-      },
-    });
+        take: 3,
+        select: {
+          id: true,
+          title: true,
+          imgUrl: true,
+          publishDate: true,
+          authorImgUrl: true,
+          likes: true,
+          views: true,
+          tags: true,
+          author: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+    }
+
     await redis.set(`relatedPosts:${blog?.id}`, JSON.stringify(relatedPosts));
+    await redis.expire(`relatedPosts:${blog?.id}`, 60 * 60);
+
     const bookmarks = await getBookmarks(userId ?? "");
     const Likes = await getLikes(userId ?? "");
     let bookMarkPostIds: number[] = [];

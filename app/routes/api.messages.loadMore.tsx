@@ -1,6 +1,8 @@
 import { ActionFunctionArgs, json } from "@remix-run/node";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { prisma } from "~/.server/db";
+import { Redis } from "@upstash/redis";
+import { getRedisConfig } from "~/lib/url";
 
 export const action = async (args: ActionFunctionArgs) => {
   const { request } = args;
@@ -15,7 +17,7 @@ export const action = async (args: ActionFunctionArgs) => {
     // Parse the request body
     const body = await request.json();
     const { conversationId, beforeId, beforeDate, limit = 30 } = body;
-
+    const redis = new Redis(getRedisConfig());
     if (!conversationId) {
       return json({ error: "Missing conversationId" }, { status: 400 });
     }
@@ -39,37 +41,50 @@ export const action = async (args: ActionFunctionArgs) => {
       );
     }
 
-    // Load messages before the specified message ID
-    const messages = await prisma.message.findMany({
-      where: {
-        conversationId,
-        AND: [
-          {
-            id: {
-              lt: beforeId,
+    //get the cached previous messages
+    let messages;
+    const cachedMessages = await redis.get(`messages:${conversationId}`);
+    if (cachedMessages) {
+      messages = JSON.parse(JSON.stringify(cachedMessages));
+      console.log("cached messages are being shown");
+      // add exipry time
+      await redis.expire(`messages:${conversationId}`, 15 * 60);
+    } else {
+      // Load messages before the specified message ID
+      messages = await prisma.message.findMany({
+        where: {
+          conversationId,
+          AND: [
+            {
+              id: {
+                lt: beforeId,
+              },
             },
-          },
-          {
-            createdAt: {
-              lt: new Date(beforeDate),
+            {
+              createdAt: {
+                lt: new Date(beforeDate),
+              },
             },
-          },
-        ],
-      },
-      orderBy: {
-        createdAt: "desc", // Newest first within the older set
-      },
-      take: limit,
-      include: {
-        sender: {
-          select: {
-            name: true,
-            pfpUrl: true,
+          ],
+        },
+        orderBy: {
+          createdAt: "desc", // Newest first within the older set
+        },
+        take: limit,
+        include: {
+          sender: {
+            select: {
+              name: true,
+              pfpUrl: true,
+            },
           },
         },
-      },
-    });
+      });
+      await redis.set(`messages:${conversationId}`, JSON.stringify(messages));
+      console.log("cached messages");
 
+      await redis.expire(`messages:${conversationId}`, 15 * 60);
+    }
     // Count remaining messages for hasMore flag
     const remainingCount = await prisma.message.count({
       where: {
