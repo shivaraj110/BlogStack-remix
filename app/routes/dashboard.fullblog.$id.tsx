@@ -77,6 +77,9 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
     const cachedBlog = await redis.get(cacheKey);
     if (cachedBlog) {
       blog = JSON.parse(JSON.stringify(cachedBlog));
+
+      await redis.incr(`blog:${blog.id}:views`);
+      await redis.expire(`post:${blog.id}:views`, 15 * 60);
       console.log("fetched cached blog!!!");
     } else {
       blog = await prisma.post.findUnique({
@@ -111,6 +114,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
         },
       });
       await redis.set(cacheKey, JSON.stringify(blog));
+      await redis.setnx(`blog:${blog?.id}:views`, blog?.views.length);
     }
 
     // Get related posts
@@ -147,7 +151,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
     let likedPosts: number[] = [];
     bookmarks?.map((b) => [bookMarkPostIds.push(b.postId)]);
     Likes?.map((l) => [likedPosts.push(l.postId)]);
-
+    const viewCount = await redis.get(`blog:${blog.id}:views`)
     return {
       status: "success",
       body: {
@@ -155,6 +159,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
         bookMarkPostIds,
         likedPosts,
         relatedPosts,
+        viewCount
       },
     };
   } catch (e) {
@@ -204,7 +209,7 @@ const FullBlog = () => {
   const relatedPosts = body.relatedPosts;
   const bookmarks: number[] = body.bookMarkPostIds;
   const likedPosts: number[] = body.likedPosts;
-
+  const viewCount: number = body.viewCount;
   const BookMarked = () => {
     let val = false;
     bookmarks.map((b) => {
@@ -724,8 +729,8 @@ const FullBlog = () => {
                     >
                       <Heart
                         className={`h-4 sm:h-5 sm:w-5 ${isLiked
-                            ? "fill-current text-red-500"
-                            : "text-white/70 group-hover:text-red-500"
+                          ? "fill-current text-red-500"
+                          : "text-white/70 group-hover:text-red-500"
                           } transition-colors duration-200`}
                       />
                       <span
@@ -756,8 +761,8 @@ const FullBlog = () => {
                     >
                       <Bookmark
                         className={`h-4 sm:h-5 sm:w-5 ${isBookmarked
-                            ? "fill-current text-blue-500"
-                            : "text-white/70 group-hover:text-blue-500"
+                          ? "fill-current text-blue-500"
+                          : "text-white/70 group-hover:text-blue-500"
                           } transition-colors duration-200`}
                       />
                       <span
@@ -796,7 +801,7 @@ const FullBlog = () => {
                   ) : null}
                   <div className="flex items-center justify-between gap-1 text-white/70">
                     <EyeIcon className="h-4 w-4" />
-                    {blog.views.length}
+                    {viewCount}
                   </div>
                 </div>
 
@@ -856,8 +861,8 @@ const FullBlog = () => {
                           onClick={handleCommentSubmit}
                           disabled={!comment}
                           className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full ${comment
-                              ? "text-blue-500 hover:bg-white/5"
-                              : "text-white/30"
+                            ? "text-blue-500 hover:bg-white/5"
+                            : "text-white/30"
                             } transition-colors`}
                         >
                           <SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
