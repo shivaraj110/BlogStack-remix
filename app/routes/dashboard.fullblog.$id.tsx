@@ -81,7 +81,6 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
       await redis.incr(`blog:${blog.id}:views`);
       //refreshing views to be in correct sync with database
       await redis.expire(`blog:${blog.id}:views`, 15 * 60);
-      console.log("fetched cached blog!!!");
     } else {
       blog = await prisma.post.findUnique({
         where: {
@@ -118,8 +117,14 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
       await redis.setnx(`blog:${blog?.id}:views`, blog?.views.length);
     }
 
-    // Get related posts
-    const relatedPosts = await prisma.post.findMany({
+    // Get chached related posts
+    let relatedPosts;
+    const cachedRelatedPosts = await redis.get(`relatedPosts:${blog.id}`);
+    if (cachedRelatedPosts) {
+      relatedPosts = JSON.parse(JSON.stringify(cachedRelatedPosts));
+      await redis.expire(`relatedPosts:${relatedPosts.id}`, 60 * 60);
+    }
+    relatedPosts = await prisma.post.findMany({
       where: {
         id: {
           not: id,
@@ -145,7 +150,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
         },
       },
     });
-
+    await redis.set(`relatedPosts:${blog?.id}`, JSON.stringify(relatedPosts));
     const bookmarks = await getBookmarks(userId ?? "");
     const Likes = await getLikes(userId ?? "");
     let bookMarkPostIds: number[] = [];
@@ -153,14 +158,15 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
     bookmarks?.map((b) => [bookMarkPostIds.push(b.postId)]);
     Likes?.map((l) => [likedPosts.push(l.postId)]);
     const viewCount = await redis.get(`blog:${blog.id}:views`);
+
     return {
       status: "success",
       body: {
         blog,
         bookMarkPostIds,
         likedPosts,
-        relatedPosts,
         viewCount,
+        relatedPosts,
       },
     };
   } catch (e) {
@@ -730,8 +736,8 @@ const FullBlog = () => {
                     >
                       <Heart
                         className={`h-4 sm:h-5 sm:w-5 ${isLiked
-                          ? "fill-current text-red-500"
-                          : "text-white/70 group-hover:text-red-500"
+                            ? "fill-current text-red-500"
+                            : "text-white/70 group-hover:text-red-500"
                           } transition-colors duration-200`}
                       />
                       <span
@@ -762,8 +768,8 @@ const FullBlog = () => {
                     >
                       <Bookmark
                         className={`h-4 sm:h-5 sm:w-5 ${isBookmarked
-                          ? "fill-current text-blue-500"
-                          : "text-white/70 group-hover:text-blue-500"
+                            ? "fill-current text-blue-500"
+                            : "text-white/70 group-hover:text-blue-500"
                           } transition-colors duration-200`}
                       />
                       <span
@@ -862,8 +868,8 @@ const FullBlog = () => {
                           onClick={handleCommentSubmit}
                           disabled={!comment}
                           className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full ${comment
-                            ? "text-blue-500 hover:bg-white/5"
-                            : "text-white/30"
+                              ? "text-blue-500 hover:bg-white/5"
+                              : "text-white/30"
                             } transition-colors`}
                         >
                           <SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
