@@ -77,9 +77,10 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
     const cachedBlog = await redis.get(cacheKey);
     if (cachedBlog) {
       blog = JSON.parse(JSON.stringify(cachedBlog));
-
+      await redis.expire(`blog:${blog.id}`, 60 * 60);
       await redis.incr(`blog:${blog.id}:views`);
-      await redis.expire(`post:${blog.id}:views`, 15 * 60);
+      //refreshing views to be in correct sync with database
+      await redis.expire(`blog:${blog.id}:views`, 15 * 60);
       console.log("fetched cached blog!!!");
     } else {
       blog = await prisma.post.findUnique({
@@ -151,7 +152,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
     let likedPosts: number[] = [];
     bookmarks?.map((b) => [bookMarkPostIds.push(b.postId)]);
     Likes?.map((l) => [likedPosts.push(l.postId)]);
-    const viewCount = await redis.get(`blog:${blog.id}:views`)
+    const viewCount = await redis.get(`blog:${blog.id}:views`);
     return {
       status: "success",
       body: {
@@ -159,7 +160,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
         bookMarkPostIds,
         likedPosts,
         relatedPosts,
-        viewCount
+        viewCount,
       },
     };
   } catch (e) {
