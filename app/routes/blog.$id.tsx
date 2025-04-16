@@ -1,4 +1,4 @@
-import { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
+import { LoaderFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { Link, useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
 import {
   ArrowLeft,
@@ -118,7 +118,7 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   }
 };
 
-export const meta = ({ data }: { data: any }) => {
+export const meta: MetaFunction = ({ data }: { data: any }) => {
   if (!data?.meta) return [];
 
   const { title, description, image, author, publishDate } = data.meta;
@@ -407,13 +407,11 @@ const PublicBlog = () => {
                                 type="submit"
                                 disabled={!comment || isSubmitting}
                                 onClick={handleCommentSubmit}
-                                className={`p-1 rounded-full ${
-                                  comment && !isSubmitting
-                                    ? "text-blue-500 hover:bg-white/5"
-                                    : "text-white/30"
-                                } transition-colors ${
-                                  isSubmitting ? "animate-pulse" : ""
-                                }`}
+                                className={`p-1 rounded-full ${comment && !isSubmitting
+                                  ? "text-blue-500 hover:bg-white/5"
+                                  : "text-white/30"
+                                  } transition-colors ${isSubmitting ? "animate-pulse" : ""
+                                  }`}
                               >
                                 <SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
                               </button>
@@ -441,7 +439,7 @@ const PublicBlog = () => {
                   {/* Comments List Preview */}
                   <div className="space-y-4 sm:space-y-6 max-h-[300px] sm:max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {fetcher.state === "submitting" ||
-                    fetcher.state === "loading" ? (
+                      fetcher.state === "loading" ? (
                       // Loading state for new comments being submitted
                       <div className="animate-pulse space-y-4">
                         {[...Array(3)].map((_, index) => (

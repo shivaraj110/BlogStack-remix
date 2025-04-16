@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/remix/ssr.server";
-import { LoaderFunctionArgs, json } from "@remix-run/node";
+import { LoaderFunctionArgs, MetaFunction, json } from "@remix-run/node";
 import {
   useLoaderData,
   useNavigate,
@@ -158,6 +158,13 @@ export const loader = async (args: LoaderFunctionArgs) => {
     conversations: conversationsWithData,
     users,
   });
+};
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "messages | BlogStack" },
+    { name: "description", content: "chat with other authors and friends!" },
+  ];
 };
 
 export default function MessagesPage() {

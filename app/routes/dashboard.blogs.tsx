@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs, json } from "@remix-run/node";
+import { LoaderFunctionArgs, MetaFunction, json } from "@remix-run/node";
 import { useLoaderData, Link, useSearchParams } from "@remix-run/react";
 import { prisma } from "~/.server/db";
 import { Plus, Search, Filter, Bookmark } from "lucide-react";
@@ -138,6 +138,13 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>?/gm, "");
 }
 
+export const meta: MetaFunction = () => {
+  return [
+    { title: 'blogs | BlogStack' },
+    { name: "description", content: "blogs from different authors" }
+  ]
+}
+
 export default function BlogsPage() {
   const { body } = useLoaderData<typeof loader>();
   const { blogs, pagination, searchQuery } = body;
@@ -247,8 +254,8 @@ export default function BlogsPage() {
             to={`?page=${pagination.currentPage - 1}${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ""
               }`}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasPrevPage
-                ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
-                : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
+              ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
+              : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
               }`}
             onClick={(e) => !pagination.hasPrevPage && e.preventDefault()}
           >
@@ -261,8 +268,8 @@ export default function BlogsPage() {
             to={`?page=${pagination.currentPage + 1}${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ""
               }`}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasNextPage
-                ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
-                : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
+              ? "bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-gray-200 dark:border-white/5"
+              : "bg-white dark:bg-[#0a0a0a] text-gray-400 dark:text-white/40 cursor-not-allowed border border-gray-200 dark:border-white/5"
               }`}
             onClick={(e) => !pagination.hasNextPage && e.preventDefault()}
           >

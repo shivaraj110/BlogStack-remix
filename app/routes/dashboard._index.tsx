@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/remix/ssr.server";
-import { LoaderFunctionArgs, json } from "@remix-run/node";
+import { LoaderFunctionArgs, MetaFunction, json } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { format } from "date-fns";
 import { prisma } from "~/.server/db";
@@ -126,6 +126,13 @@ export const loader = async (args: LoaderFunctionArgs) => {
     );
   }
 };
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: 'Dashboard | BlogStack' },
+    { name: "description", content: "Dashboard view of your account" }
+  ]
+}
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -307,8 +314,8 @@ export default function DashboardPage() {
             <Link
               to={`?page=${pagination.currentPage - 1}`}
               className={`px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasPrevPage
-                  ? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
-                  : "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
+                ? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
+                : "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
                 }`}
               onClick={(e) => !pagination.hasPrevPage && e.preventDefault()}
             >
@@ -320,8 +327,8 @@ export default function DashboardPage() {
             <Link
               to={`?page=${pagination.currentPage + 1}`}
               className={`px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm font-medium transition-colors ${pagination.hasNextPage
-                  ? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
-                  : "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
+                ? "bg-[#111111] text-white hover:bg-[#1a1a1a] border border-white/10"
+                : "bg-[#111111] text-white/40 cursor-not-allowed border border-white/5"
                 }`}
               onClick={(e) => !pagination.hasNextPage && e.preventDefault()}
             >

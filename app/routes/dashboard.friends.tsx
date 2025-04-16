@@ -1,5 +1,10 @@
 import { getAuth } from "@clerk/remix/ssr.server";
-import { LoaderFunctionArgs, json, redirect } from "@remix-run/node";
+import {
+  LoaderFunctionArgs,
+  json,
+  redirect,
+  MetaFunction,
+} from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { useUser } from "@clerk/remix";
 import { prisma } from "~/.server/db";
@@ -162,8 +167,8 @@ export const loader = async (args: LoaderFunctionArgs) => {
           email:
             typeof friendData.email === "object" && friendData.email !== null
               ? (friendData.email as any).emailAddress ||
-                (friendData.email as any).email ||
-                JSON.stringify(friendData.email)
+              (friendData.email as any).email ||
+              JSON.stringify(friendData.email)
               : String(friendData.email || ""),
           createdAt: friendship.createdAt.toISOString(),
         };
@@ -180,10 +185,10 @@ export const loader = async (args: LoaderFunctionArgs) => {
       senderPfp: request.sender.pfpUrl,
       senderEmail:
         typeof request.sender.email === "object" &&
-        request.sender.email !== null
+          request.sender.email !== null
           ? (request.sender.email as any).emailAddress ||
-            (request.sender.email as any).email ||
-            JSON.stringify(request.sender.email)
+          (request.sender.email as any).email ||
+          JSON.stringify(request.sender.email)
           : String(request.sender.email || ""),
       createdAt: request.createdAt.toISOString(),
     }));
@@ -197,6 +202,13 @@ export const loader = async (args: LoaderFunctionArgs) => {
       error: error instanceof Error ? error.message : "Failed to load friends",
     });
   }
+};
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "friends| BlogStack" },
+    { name: "description", content: "friends list, accept/reject friend requests" },
+  ];
 };
 
 export default function FriendsPage() {
@@ -278,11 +290,10 @@ export default function FriendsPage() {
       <div className="flex space-x-1 bg-white/5 p-1 rounded-lg mb-8">
         <button
           onClick={() => setActiveTab("friends")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
-            activeTab === "friends"
-              ? "bg-blue-500 text-white"
-              : "text-white/70 hover:text-white hover:bg-white/10"
-          }`}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${activeTab === "friends"
+            ? "bg-blue-500 text-white"
+            : "text-white/70 hover:text-white hover:bg-white/10"
+            }`}
         >
           <Users className="h-4 w-4" />
           <span>All Friends</span>
@@ -294,11 +305,10 @@ export default function FriendsPage() {
         </button>
         <button
           onClick={() => setActiveTab("received")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
-            activeTab === "received"
-              ? "bg-blue-500 text-white"
-              : "text-white/70 hover:text-white hover:bg-white/10"
-          }`}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${activeTab === "received"
+            ? "bg-blue-500 text-white"
+            : "text-white/70 hover:text-white hover:bg-white/10"
+            }`}
         >
           <UserPlus className="h-4 w-4" />
           <span>Received</span>
@@ -310,11 +320,10 @@ export default function FriendsPage() {
         </button>
         <button
           onClick={() => setActiveTab("sent")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
-            activeTab === "sent"
-              ? "bg-blue-500 text-white"
-              : "text-white/70 hover:text-white hover:bg-white/10"
-          }`}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${activeTab === "sent"
+            ? "bg-blue-500 text-white"
+            : "text-white/70 hover:text-white hover:bg-white/10"
+            }`}
         >
           <MailPlus className="h-4 w-4" />
           <span>Sent</span>

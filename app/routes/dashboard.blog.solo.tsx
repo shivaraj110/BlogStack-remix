@@ -1,6 +1,6 @@
 import { createClerkClient } from "@clerk/remix/api.server";
 import { getAuth } from "@clerk/remix/ssr.server";
-import { ActionFunction, ActionFunctionArgs } from "@remix-run/node";
+import { ActionFunction, ActionFunctionArgs, MetaFunction } from "@remix-run/node";
 import { Form, redirect, useActionData } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import { pushBlogs } from "~/.server/pushBlogs";
@@ -68,6 +68,16 @@ export const action: ActionFunction = async (args: ActionFunctionArgs) => {
     };
   }
 };
+export const meta: MetaFunction = () => {
+  return [
+    { title: "write article | BlogStack" },
+    {
+      name: "description",
+      content: "write and publish your article to BlogStack",
+    },
+  ];
+};
+
 
 const Solo = () => {
   const actionData = useActionData<{

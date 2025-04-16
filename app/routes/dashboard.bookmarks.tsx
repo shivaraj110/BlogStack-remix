@@ -1,5 +1,9 @@
 import { getAuth } from "@clerk/remix/ssr.server";
-import { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
+import {
+  LoaderFunction,
+  LoaderFunctionArgs,
+  MetaFunction,
+} from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 import { getBookmarks } from "~/.server/bookmark";
 import BlogCard from "~/components/Blog";
@@ -23,7 +27,17 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
   }
 };
 
-export default function() {
+export const meta: MetaFunction = () => {
+  return [
+    { title: "your bookmarks | BlogStack" },
+    {
+      name: "description",
+      content: "the blogs that you have saved in BlogStack",
+    },
+  ];
+};
+
+export default function () {
   const { body } = useLoaderData<typeof loader>();
   const blogs: BookmarkedBlogData[] = body.blogs;
 
