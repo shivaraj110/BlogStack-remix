@@ -19,10 +19,19 @@ import {
   Star,
   Sparkles,
   Compass,
+  BellOff,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import SocketInitializer from "~/components/SocketInitializer";
 import ToastContainer from "~/components/ToastContainer";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
@@ -303,10 +312,32 @@ const Dashboard = () => {
               </div>
 
               {/* Action Icons */}
-              <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors relative group">
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-                <Bell className="h-5 w-5 text-white/70 group-hover:text-white transition-colors" />
-              </button>
+
+              {/* span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>*/}
+
+              <Dialog>
+                <DialogTrigger>
+                  <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors relative group">
+                    <Bell className="h-5 w-5 text-white/70 group-hover:text-white transition-colors" />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px] bg-black/50 backdrop-blur-sm">
+                  <DialogHeader>
+                    <DialogTitle>Notifications</DialogTitle>
+                    <DialogDescription>
+                      Notifications new to you are shown here.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="text-gray-400 text-center space-y-2">
+                    <div className="flex justify-center">
+                      <BellOff size={100} />
+                    </div>
+                    <p>
+                      you are all caught up!
+                    </p>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
               <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
                 <Settings className="h-5 w-5 text-white/70 group-hover:text-white group-hover:rotate-45 transition-all duration-300" />
