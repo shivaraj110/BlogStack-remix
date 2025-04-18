@@ -64,7 +64,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
   if (!userId) {
     console.log("No userId found in auth");
-    return redirect("/login");
+    return redirect("/");
   }
 
   console.log("Loading friends for user:", userId);
@@ -217,8 +217,7 @@ export default function FriendsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<TabType>("friends");
 
-  console.log("Friends page data:", data);
-  console.log("Current user:", user);
+  console.log("Current user:", user?.id);
 
   if (!user) {
     console.log("No user found");

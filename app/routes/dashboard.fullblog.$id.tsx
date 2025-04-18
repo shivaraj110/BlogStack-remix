@@ -78,6 +78,8 @@ export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
     if (cachedBlog) {
       blog = JSON.parse(JSON.stringify(cachedBlog));
       await redis.expire(`blog:${blog.id}`, 60 * 60);
+      await redis.setnx(`blog:${blog?.id}:views`, blog?.views.length);
+
       await redis.incr(`blog:${blog.id}:views`);
       //refreshing views to be in correct sync with database
       await redis.expire(`blog:${blog.id}:views`, 15 * 60);
