@@ -634,23 +634,26 @@ const PublicBlog = () => {
               )}
 
               {/* Join Banner */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 border border-blue-500 rounded-xl shadow-xl overflow-hidden">
-                <div className="p-4 sm:p-6">
-                  <h3 className="text-base sm:text-lg font-bold mb-2">
-                    Join BlogStack Community
-                  </h3>
-                  <p className="text-white/90 text-xs sm:text-sm mb-4">
-                    Create your own blog posts, engage with other writers, and
-                    build your audience.
-                  </p>
-                  <Link
-                    to="/dashboard"
-                    className="inline-block w-full text-center bg-white text-blue-600 font-medium text-sm py-2 px-4 rounded-lg hover:bg-white/90 transition-colors"
-                  >
-                    Get Started
-                  </Link>
-                </div>
-              </div>
+              {
+                !user ? (
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 border border-blue-500 rounded-xl shadow-xl overflow-hidden">
+                    <div className="p-4 sm:p-6">
+                      <h3 className="text-base sm:text-lg font-bold mb-2">
+                        Join BlogStack Community
+                      </h3>
+                      <p className="text-white/90 text-xs sm:text-sm mb-4">
+                        Create your own blog posts, engage with other writers, and
+                        build your audience.
+                      </p>
+                      <Link
+                        to="/dashboard"
+                        className="inline-block w-full text-center bg-white text-blue-600 font-medium text-sm py-2 px-4 rounded-lg hover:bg-white/90 transition-colors"
+                      >
+                        Get Started
+                      </Link>
+                    </div>
+                  </div>) : null
+              }
             </div>
           </div>
         </div>
