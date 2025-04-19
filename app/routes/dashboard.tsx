@@ -144,16 +144,6 @@ const Dashboard = () => {
           icon: <Users className="h-5 w-5" />,
           path: "/dashboard/friends",
         },
-        {
-          name: "Community",
-          icon: <Users className="h-5 w-5" />,
-          path: "/dashboard/community",
-        },
-        {
-          name: "Featured",
-          icon: <Star className="h-5 w-5" />,
-          path: "/dashboard/featured",
-        },
       ],
     },
   ];
