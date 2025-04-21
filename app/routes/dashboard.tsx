@@ -223,8 +223,8 @@ const Dashboard = () => {
                           key={item.path}
                           to={item.path}
                           className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative group ${active
-                            ? "bg-gradient-to-r from-blue-500/20 to-indigo-500/10 text-blue-400 font-medium"
-                            : "text-white/70 hover:text-white hover:bg-white/10"
+                              ? "bg-gradient-to-r from-blue-500/20 to-indigo-500/10 text-blue-400 font-medium"
+                              : "text-white/70 hover:text-white hover:bg-white/10"
                             }`}
                         >
                           {active && (
@@ -232,8 +232,8 @@ const Dashboard = () => {
                           )}
                           <span
                             className={`${active
-                              ? "text-blue-400"
-                              : "text-white/60 group-hover:text-white group-hover:scale-110"
+                                ? "text-blue-400"
+                                : "text-white/60 group-hover:text-white group-hover:scale-110"
                               } transition-all duration-200`}
                           >
                             {item.icon}
@@ -322,16 +322,10 @@ const Dashboard = () => {
                     <div className="flex justify-center">
                       <BellOff size={100} />
                     </div>
-                    <p>
-                      you are all caught up!
-                    </p>
+                    <p>you are all caught up!</p>
                   </div>
                 </DialogContent>
               </Dialog>
-
-              <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
-                <Settings className="h-5 w-5 text-white/70 group-hover:text-white group-hover:rotate-45 transition-all duration-300" />
-              </button>
 
               {/* Mobile User Button - Only shown on smaller screens */}
               <div className="lg:hidden">
@@ -344,8 +338,8 @@ const Dashboard = () => {
         {/* Page Content */}
         <main
           className={`flex-1 overflow-y-auto bg-[#0a0a0a] ${!useLocation().pathname.startsWith("/dashboard/messages")
-            ? "p-6"
-            : ""
+              ? "p-6"
+              : ""
             }`}
         >
           <Outlet />
