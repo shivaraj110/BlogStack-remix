@@ -1292,9 +1292,7 @@ export default function ConversationPage() {
                 <DropdownMenuItem className="text-sm flex cursor-pointer hover:bg-[#000000]">
                   block
                 </DropdownMenuItem>{" "}
-                <DropdownMenuItem className="text-sm flex cursor-pointer hover:bg-[#000000]">
-                  report & block
-                </DropdownMenuItem>{" "}
+
                 <DropdownMenuItem className="text-sm flex text-red-500 cursor-pointer hover:bg-[#000000]">
                   remove friend
                 </DropdownMenuItem>
