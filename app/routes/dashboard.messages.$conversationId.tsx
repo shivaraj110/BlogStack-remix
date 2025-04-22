@@ -9,16 +9,27 @@ import {
   Paperclip,
   Image,
   Smile,
-  Mic,
   Loader2,
   MoreHorizontal,
   Edit,
   Trash,
   UserPlus,
   AlertTriangle,
+  CircleSlash,
+  Trash2,
+  CircleSlash2,
+  UserMinus,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useSocket } from "~/hooks/useSocket";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 
 // Number of messages to load per page
 const MESSAGES_PER_PAGE = 30;
@@ -1248,25 +1259,47 @@ export default function ConversationPage() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <button
-              className="p-2 rounded-full text-white/50 hover:text-white/80 hover:bg-white/5 transition-all"
-              title="More options"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-5 h-5"
-              >
-                <circle cx="12" cy="12" r="1"></circle>
-                <circle cx="19" cy="12" r="1"></circle>
-                <circle cx="5" cy="12" r="1"></circle>
-              </svg>
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <button
+                  className="p-2 rounded-full text-white/50 hover:text-white/80 hover:bg-white/5 transition-all"
+                  title="More options"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-5 h-5"
+                  >
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                  </svg>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-[#111111] flex-col justify-center text-center p-1">
+                <DropdownMenuLabel className="text-sm text-center">
+                  options
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-sm flex cursor-pointer hover:bg-[#000000]">
+                  clear chat
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-sm flex cursor-pointer hover:bg-[#000000]">
+                  block
+                </DropdownMenuItem>{" "}
+                <DropdownMenuItem className="text-sm flex cursor-pointer hover:bg-[#000000]">
+                  report & block
+                </DropdownMenuItem>{" "}
+                <DropdownMenuItem className="text-sm flex text-red-500 cursor-pointer hover:bg-[#000000]">
+                  remove friend
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
