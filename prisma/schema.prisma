@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider   = "prisma-client-js"
-  engineType = "library"
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
 }
 
 datasource db {
@@ -15,11 +9,15 @@ datasource db {
 }
 
 model User {
-  id                     Int             @id @default(autoincrement())
-  identifier             String          @unique
-  email                  String
-  name                   String?
-  password               String?
+  id                     String          @id @unique
+  name                   String
+  email                  String          @unique
+  emailVerified          Boolean
+  image                  String?
+  createdAt              DateTime
+  updatedAt              DateTime
+  session                Session[]
+  accounts               Account[]
   posts                  Post[]
   bookmarks              Bookmark[]
   pfpUrl                 String?
@@ -41,24 +39,61 @@ model User {
   friendshipsReceived    Friendship[]    @relation("FriendshipUser2")
 }
 
+model Session {
+  id        String   @id @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+model Account {
+  id                   String    @id @unique
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id])
+  accountId            String
+  providerId           String
+  accessToken          String?
+  refreshToken         String?
+  refreshTokenExpireAt DateTime?
+  accessTokenExpiresAt DateTime?
+  scope                String?
+  idToken              String?
+  password             String?
+  createdAt            DateTime
+  updatedAt            DateTime
+}
+
+model verification {
+  id         String   @id @unique
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime
+  updatedAt  DateTime
+}
+
 model Connection {
-  id     Int  @id @default(autoincrement())
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model Post {
-  id           Int        @id @default(autoincrement())
+  id           String     @id @unique
   title        String
   content      String
-  published    Boolean    @default(false)
-  author       User       @relation(fields: [authorId], references: [identifier])
+  published    Boolean    @default(true)
+  author       User       @relation(fields: [authorId], references: [id])
   authorId     String
   authorImgUrl String
   publishDate  String
   tags         String[]
   bookmarks    Bookmark[]
-  bookmarked   Boolean    @default(false)
   comments     Comment[]
   imgUrl       String
   likes        Like[]
@@ -66,70 +101,71 @@ model Post {
 }
 
 model Bookmark {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [identifier], onDelete: Cascade)
+  id        String   @id @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    Int
+  postId    String
   createdAt DateTime @default(now())
 }
 
 model Like {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [identifier], onDelete: Cascade)
+  id String @id @unique
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    Int
+  postId    String
   createdAt DateTime @default(now())
 }
 
 model View {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [identifier], onDelete: Cascade)
+  id        String   @id @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    Int
+  postId    String
   createdAt DateTime @default(now())
 }
 
 model Comment {
-  id          Int       @id @default(autoincrement())
-  user        User      @relation(fields: [userId], references: [identifier])
+  id          String    @id @unique
+  user        User      @relation(fields: [userId], references: [id])
   userId      String
   comment     String
   replies     Replies[]
   Post        Post?     @relation(fields: [postId], references: [id])
-  postId      Int?
+  postId      String?
   commentedAt DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 }
 
 model Replies {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [identifier])
+  id        String   @id @unique
+  user      User     @relation(fields: [userId], references: [id])
   userId    String
   content   String
   Comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  commentId Int?
+  commentId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Message {
-  id             Int          @id @default(autoincrement())
+  id             String       @id @unique
   content        String
-  sender         User         @relation("SentMessages", fields: [senderId], references: [identifier])
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
   senderId       String
-  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [identifier])
+  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [id])
   receiverId     String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  conversationId Int
+  conversationId String
   read           Boolean      @default(false)
   createdAt      DateTime     @default(now())
 }
 
 model Conversation {
-  id        Int       @id @default(autoincrement())
+  id        String    @id @unique
   users     User[]    @relation("UserConversations")
   messages  Message[]
   updatedAt DateTime  @default(now())
@@ -137,10 +173,11 @@ model Conversation {
 }
 
 model FriendRequest {
-  id         Int      @id @default(autoincrement())
-  sender     User     @relation("SentFriendRequests", fields: [senderId], references: [identifier])
+  id String @id @unique
+
+  sender     User     @relation("SentFriendRequests", fields: [senderId], references: [id])
   senderId   String
-  receiver   User     @relation("ReceivedFriendRequests", fields: [receiverId], references: [identifier])
+  receiver   User     @relation("ReceivedFriendRequests", fields: [receiverId], references: [id])
   receiverId String
   status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
   createdAt  DateTime @default(now())
@@ -150,10 +187,11 @@ model FriendRequest {
 }
 
 model Friendship {
-  id        Int      @id @default(autoincrement())
-  user1     User     @relation("FriendshipUser1", fields: [userId], references: [identifier])
+  id String @id @unique
+
+  user1     User     @relation("FriendshipUser1", fields: [userId], references: [id])
   userId    String
-  user2     User     @relation("FriendshipUser2", fields: [friendId], references: [identifier])
+  user2     User     @relation("FriendshipUser2", fields: [friendId], references: [id])
   friendId  String
   status    String   @default("ACCEPTED")
   createdAt DateTime @default(now())
