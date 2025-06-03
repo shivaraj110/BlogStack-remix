@@ -16,7 +16,7 @@ import { useState } from 'react';
 import { authClient } from 'app/lib/auth-client';
 import { redirect, useNavigation } from '@remix-run/react';
 
-export function CardsCreateAccount(mode: {
+export function AuthCard(mode: {
 	mode: 'signin' | 'signup' | 'verification';
 }) {
 	const [Mode, setMode] = useState<'signin' | 'signup' | 'verification'>(
