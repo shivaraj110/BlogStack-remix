@@ -207,7 +207,7 @@ const Dashboard = () => {
 							<UserButton />
 							<div className="relative z-10">
 								<p className="text-sm font-semibold">
-									{user?.username}
+									{user?.firstName}
 								</p>
 								<p className="text-xs text-white/60">@{user?.username}</p>
 							</div>
