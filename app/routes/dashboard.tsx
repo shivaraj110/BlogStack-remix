@@ -185,7 +185,7 @@ const Dashboard = () => {
 
 									<div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 								</div>
-							</div>							<span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300">
+							</div><span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300">
 								BlogStack
 							</span>
 						</Link>
@@ -203,16 +203,21 @@ const Dashboard = () => {
                           scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 hover:scrollbar-thumb-white/20"
 					>
 						{/* User Info */}
-						<div className="flex items-center space-x-4 mb-8 px-2 py-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/5">
+						<div className="relative flex items-center space-x-4 mb-8 px-2 py-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/8 hover:border-white/10 transition-all duration-300 group overflow-hidden cursor-pointer">
 							<UserButton />
-							<div>
+							<div className="relative z-10">
 								<p className="text-sm font-semibold">
-									{user?.fullName || user?.username}
+									{user?.username}
 								</p>
 								<p className="text-xs text-white/60">@{user?.username}</p>
 							</div>
-						</div>
 
+							{/* Main shimmer effect */}
+							<div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
+
+							{/* Subtle secondary shimmer */}
+							<div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-blue-400/5 to-transparent transition-transform duration-1200 delay-100 group-hover:translate-x-full" />
+						</div>
 						{/* Navigation */}
 						<nav className="space-y-6">
 							{navItems.map((section) => (
