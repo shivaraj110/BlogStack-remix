@@ -175,13 +175,17 @@ const Dashboard = () => {
 						>
 
 
-							<div className="bg-gradient-to-r shadow-blue-500/80 from-blue-300/90 to-indigo-400/90 backdrop-blur-sm backdrop-brightness-105 p-2 rounded-lg shadow-lg transition-all duration-300 group-hover:shadow-blue-500/20">
-								<img
-									className="h-6 w-6 "
+							<div className="bg-gradient-to-r shadow-blue-300/10 rounded-2xl p-1 from-blue-400/30 to-indigo-400/30 ">
+								<div className="bg-white/5 border border-white/10 backdrop-blur-md backdrop-saturate-150 p-2 rounded-xl shadow-xl shadow-blue-500/70 transition-all duration-300 group-hover:shadow-blue-500/40 group-hover:bg-white/10 group-hover:border-white/20 relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-400/10 before:to-indigo-400/10 before:opacity-0 before:transition-opacity before:duration-300 group-hover:before:opacity-100">
+									<img
+										className="h-6 w-6 relative z-10"
+										src='https://1d6kykqofq.ufs.sh/f/fVvo0hHNtQOL2sdn6AYe0XpifuAcUyr23E9Yw7IWgQsoNjkb'
+										alt="logo"
+									/>
 
-									src='https://1d6kykqofq.ufs.sh/f/fVvo0hHNtQOL2sdn6AYe0XpifuAcUyr23E9Yw7IWgQsoNjkb' alt="logo" />
-							</div>
-							<span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300">
+									<div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+								</div>
+							</div>							<span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300">
 								BlogStack
 							</span>
 						</Link>
