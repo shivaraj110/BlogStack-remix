@@ -300,8 +300,8 @@ const BlogCard = (blog: BlogData) => {
 						<button
 							onClick={toggleLike}
 							className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg transition-colors ${isLiked
-									? "text-red-400 bg-red-500/10"
-									: "text-white/60 hover:text-white/90 hover:bg-white/5"
+								? "text-red-400 bg-red-500/10"
+								: "text-white/60 hover:text-white/90 hover:bg-white/5"
 								}`}
 						>
 							<Heart
@@ -340,8 +340,8 @@ const BlogCard = (blog: BlogData) => {
 						<button
 							onClick={toggleBookmark}
 							className={`p-2 rounded-lg transition-colors ${isBookmarked
-									? "text-blue-400 bg-blue-500/10"
-									: "text-white/60 hover:text-white/90 hover:bg-white/5"
+								? "text-blue-400 bg-blue-500/10"
+								: "text-white/60 hover:text-white/90 hover:bg-white/5"
 								}`}
 						>
 							<Bookmark
