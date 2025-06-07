@@ -6,18 +6,14 @@ import {
 	AlignJustify,
 	X,
 	BookMarked,
-	LayoutDashboard,
 	NotebookPen,
 	MessageSquareText,
 	Search,
 	Bell,
-	Settings,
 	Home,
 	LogOut,
 	BarChart2,
 	Users,
-	Star,
-	Sparkles,
 	Compass,
 	BellOff,
 } from "lucide-react";
@@ -178,11 +174,12 @@ const Dashboard = () => {
 							className="flex items-center space-x-3 text-white group"
 						>
 
-							<div className="bg-gradient-to-r shadow-blue-500/80 from-blue-300/50 to-indigo-400/50 backdrop-blur-sm backdrop-brightness-105 p-2 rounded-lg shadow-lg transition-all duration-300 group-hover:shadow-blue-500/20">
+
+							<div className="bg-gradient-to-r shadow-blue-500/80 from-blue-300/90 to-indigo-400/90 backdrop-blur-sm backdrop-brightness-105 p-2 rounded-lg shadow-lg transition-all duration-300 group-hover:shadow-blue-500/20">
 								<img
 									className="h-6 w-6 "
-									src='https://1d6kykqofq.ufs.sh/f/fVvo0hHNtQOL2sdn6AYe0XpifuAcUyr23E9Yw7IWgQsoNjkb' alt="logo"
-								/>
+
+									src='https://1d6kykqofq.ufs.sh/f/fVvo0hHNtQOL2sdn6AYe0XpifuAcUyr23E9Yw7IWgQsoNjkb' alt="logo" />
 							</div>
 							<span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300">
 								BlogStack
